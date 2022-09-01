@@ -4,7 +4,7 @@ module.exports = {
     handleErrRoute: (req, res, next) => {
         const err = new Error('Can not request with route')
         err.status = 404;
-        return next(err)
+        next(err)
     },
 
     handleErr: (err, req, res, next) => {

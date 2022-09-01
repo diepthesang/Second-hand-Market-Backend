@@ -16,7 +16,6 @@ app.use(express.urlencoded({
 app.use('/auth', authRoute)
 
 // handleError
-
 app.use(handleErrRoute, handleErr)
 
 app.listen(process.env.PORT, () => {
