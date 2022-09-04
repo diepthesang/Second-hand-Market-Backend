@@ -1,120 +1,143 @@
 const bcrypt = require('bcrypt')
 const JWT = require('jsonwebtoken')
-const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount } = require("../services/auth.services");
+const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount, findOrCreateNewEmail } = require("../services/auth.services");
+const { sentCodeVerify } = require('../services/mail.services');
+var VERIFYCODEMAIL = '';
+var newEmail = '';
+var newPassword = '';
+var newConfirmPassword = '';
+var newFirstName = '';
+var newLastName = '';
+
 
 module.exports = {
+    // REGISTER ACCOUNT
     createAccount: async (req, res, next) => {
-        let err = new Error()
         try {
-            const { userName, email, password, confirmPassword, firstName, lastName, address, phone } = req.body
-            if (!userName || !email || !password || !confirmPassword || !firstName || !lastName || !lastName || !address || !phone) {
-                err.message = 'Cần điền đầy đủ thông tin để tạo tài khoản'
-                err.status = 422;
-                return next(err)
+            const { email, password, confirmPassword, firstName, lastName } = req.body
+            newEmail = email;
+            newPassword = password.replace(/\s/g, '');
+            newConfirmPassword = confirmPassword.replace(/\s/g, '');
+            newFirstName = firstName.trim();
+            newLastName = lastName.trim();
+
+            if (!email || !newPassword || !newConfirmPassword || !newFirstName || !newLastName) {
+                throw {
+                    status: 400,
+                    message: 'Ban can fai dien day du thong tin',
+                }
+
             }
-
-            if (userName.length <= 2) {
-                err.message = 'username phai lon hon 3 ki tu'
-                err.status = 422
-                return next(err)
-            }
-
-
 
             if (!validateEmail(email)) {
-                err.message = 'Định dạng email không đúng';
-                err.status = 422
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Định dạng email không đúng',
+                }
             }
 
-            if (await getUserByUserName(userName)) {
-                err.message = 'Username da ton tai';
-                err.status = 422;
-                return next(err)
-            }
-
-            if (await getUserByEmail(email)) {
-                err.message = 'Email da ton tai';
-                err.status = 422
-                return next(err)
-            }
-
-            if (password.replace(/\s/g, '').length <= 6) {
-                err.message = 'mat khau phai chua nhieu hon 6 ki tu'
-                err.status = 422;
-                return next(err);
+            if (newPassword.length <= 6) {
+                throw {
+                    status: 400,
+                    message: 'Mat khau phai chua nhieu hon 6 ki tu',
+                }
             }
 
             if (confirmPassword !== password) {
-                err.message = 'Mat khau xac thuc khong chinh xac'
-                err.status = 422
-                return next(err)
-            }
-            let phoneNumber = Number(phone)
-            if (!Number.isInteger(phoneNumber)) {
-                err.message = 'so dien thoai phai la integer'
-                err.status = 422;
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Mat khau xac thuc khong chinh xac',
+                }
             }
 
-            if (phone.length <= 8 || phone.length >= 12) {
-                err.message = 'So dien thoai phai tu 9 den 11 so'
-                err.code = 422;
-                return next(err)
-            }
+            let checkExistEmail = await getUserByEmail(email);
+            if (checkExistEmail === null) {
+                VERIFYCODEMAIL = await sentCodeVerify(email);
+                console.log('VERIFYCODEMAIL:::', VERIFYCODEMAIL)
+                throw {
+                    status: 200,
+                    message: 'Ma xac thuc da duoc gui den mail cua ban'
+                }
 
-            let result = await createAccount(userName, email, password, confirmPassword, firstName, lastName, address, phone);
-            if (result === 'success') {
-                return res.status(200).json(
-                    {
-                        code: 200,
-                        message: 'tao tai khoan thanh cong'
-                    }
-
-                )
             } else {
-                err.message = result;
-                err.status = 500
-                return next(err)
+                throw {
+                    status: 404,
+                    message: 'Dia chi email da duoc su dung'
+                }
             }
 
         } catch (error) {
-            err.message = error;
-            err.status = 404;
-            return next(err)
+            console.log(error);
+            return next(error)
+        }
+    },
+    // VERIFY CODE FOR EMAIL
+    verifyMail: async (req, res, next) => {
+        try {
+            const { verifyCode } = req.body
+
+            console.log('VERIFYCODEMAIL in verify route ::', VERIFYCODEMAIL)
+            console.log('verifyCode::', verifyCode);
+            if (verifyCode == VERIFYCODEMAIL) {
+                let result = await findOrCreateNewEmail(newEmail, newPassword, newFirstName, newLastName)
+                if (result) {
+                    throw {
+                        status: 200,
+                        message: 'Dang ki tai khoan thanh cong'
+                    }
+                } else {
+                    throw {
+                        status: 404,
+                        message: 'Khong the dang ki tai khoan'
+                    }
+                }
+            } else {
+                throw {
+                    status: 404,
+                    message: 'Ma xac thuc khong dung'
+                }
+            }
+
+
+        } catch (error) {
+            return next(error)
         }
     },
 
+    // LOGIN ACCOUNT
     loginAccount: async (req, res, next) => {
-        let err = new Error()
         try {
             const { email, password } = req.body;
 
             if (!email || !password) {
-                err.message = 'Bạn cần điền đẩy đủ thông tin'
-                err.status = 422;
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Ban can dien day du thong tin'
+                }
             };
 
 
             if (!validateEmail(email)) {
-                err.message = 'Email không được xác thực'
-                err.status = 422;
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Email khong duoc xac thuc'
+                }
             }
 
             if (password.replace(/\s/g, '').length <= 6) {
-                err.message = 'Mật khẩu phải chứa nhiều hơn 6 kí tự'
-                err.status = 422;
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Mat khau phai chua nhieu hon 6 ki tu'
+                }
             }
 
             let checkExistEmail = await getUserByEmail(email)
 
             if (!checkExistEmail) {
-                err.message = 'Email khong ton tai';
-                err.status = 422
-                return next(err)
+                throw {
+                    status: 400,
+                    message: 'Email khong ton tai'
+                }
             } else {
                 let hashPassword = checkExistEmail.password
                 bcrypt.compare(password, hashPassword, function (err, result) {
@@ -122,15 +145,12 @@ module.exports = {
                         let token = encodeToken(checkExistEmail.userId);
                         console.log(token);
                         res.setHeader('Authorization', 'Bearer ' + token)
-                        return res.status(200).json(
-                            {
-                                status: 200,
-                                message: 'login thanh cong'
-                            }
-                        )
+                        let error = new Error('Login thanh cong');
+                        error.status = 200
+                        return next(error)
                     } else {
-                        let error = new Error('Mat khau sai')
-                        error.status = 422
+                        let error = new Error('Mat khau sai');
+                        error.status = 404
                         return next(error)
                     }
                 })
@@ -138,13 +158,12 @@ module.exports = {
             }
 
         } catch (error) {
-            err.message = error;
-            err.status = 500;
-            return next(err)
+            return next(error)
         }
 
     },
 
+    // UPDATE ACCOUNT
     updateAccount: async (req, res, next) => {
         let err = new Error()
         try {

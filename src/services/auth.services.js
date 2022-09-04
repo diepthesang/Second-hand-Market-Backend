@@ -1,9 +1,9 @@
 const db = require('../db/models/index')
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
 
 module.exports = {
-    createAccount: async (userName, email, password, firstName, lastName, address, phone, avatarImg) => {
+    createAccount: async (userName, email, password, firstName, lastName, address, phone) => {
         try {
             bcrypt.hash(password, 8).then(function (hashPassword) {
                 db.User.create(
@@ -17,7 +17,6 @@ module.exports = {
                         address,
                         phone,
                         role: process.env.ROLE_USER,
-                        avatarImg
                     }
                 )
             })
@@ -31,13 +30,19 @@ module.exports = {
     },
 
     getUserByEmail: async (email) => {
-        return await db.User.findOne(
-            {
-                where: {
-                    email
+        console.log('email service ::', email)
+        try {
+            let user = await db.User.findOne(
+                {
+                    where: {
+                        email: email
+                    }
                 }
-            }
-        )
+            )
+            return user;
+        } catch (error) {
+            throw error
+        }
     },
 
     getUserByUserName: async (userName) => {
@@ -86,8 +91,31 @@ module.exports = {
         } catch (error) {
             return error
         }
+    },
+
+    findOrCreateNewEmail: async (email, password, firstName, lastName) => {
+        try {
+            const hashPassword = bcrypt.hashSync(password, 8);
+            const [user, created] = await db.User.findOrCreate(
+                {
+                    where: {
+                        email
+                    },
+
+                    defaults: {
+                        userId: uuidv4(),
+                        password: hashPassword,
+                        firstName,
+                        lastName,
+                    }
+                }
+            );
+
+            return created;
+        } catch (error) {
+            throw error;
+        }
+
     }
-
-
 
 }
