@@ -13,21 +13,26 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true
 }));
-app.use('/', async (req, res, next) => {
-    let user = await db.User.findOne(
-        {
-            where: {
-                email: 'leotime1010@gmail.com'
-            }
-        }
-    )
+// app.use('/', async (req, res, next) => {
+//     let user = await db.User.findOne(
+//         {
+//             where: {
+//                 email: 'leotime1010@gmail.com'
+//             }
+//         }
+//     )
 
-    return res.json(
-        {
-            data: user
-        }
-    )
+//     return res.json(
+//         {
+//             data: user
+//         }
+//     )
+// })
+
+app.use('/', (req, res, next) => {
+    res.json('cayyyyyyyy')
 })
+
 app.use('/auth', authRoute)
 
 // handleError
