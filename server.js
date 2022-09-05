@@ -13,7 +13,12 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true
 }));
-app.get('/', async (req, res, next) => {
+app.get('/', (req, res, next) => {
+    return res.json('cay wa r')
+})
+
+
+app.get('/test', async (req, res, next) => {
     let user = await db.User.findOne(
         {
             where: {
@@ -28,6 +33,8 @@ app.get('/', async (req, res, next) => {
         }
     )
 })
+
+
 
 
 
