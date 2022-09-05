@@ -1,8 +1,9 @@
-{
+require('dotenv').config();
+module.exports = {
   "development": {
-    "username": "sQ29JOlRi2",
-    "password": "qOyuP7Ky2F",
-    "database": "sQ29JOlRi2",
+    "username": process.env.USERNAME_DB,
+    "password": process.env.PASSWORD_DB,
+    "database": process.env.DATABASE_NAME,
     "host": "remotemysql.com",
     "dialect": "mysql",
     "logging": false,
