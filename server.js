@@ -12,7 +12,12 @@ app.use(express.json())
 app.use(express.urlencoded({
     extended: true
 }));
-
+app.use('/', (req, res, next) => {
+    return res.status(200).json({
+        status: 200,
+        message: 'Server is running'
+    })
+})
 app.use('/auth', authRoute)
 
 // handleError

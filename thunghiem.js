@@ -46,21 +46,27 @@ const { v4: uuidv4 } = require('uuid');
 // var newName = name.trim().length
 // console.log(newName);
 
-let getUserByEmail = async (email) => {
-    // console.log('email service ::', email)
-    try {
-        let user = await db.User.findOne(
-            {
-                where: {
-                    email: email
-                }
-            }
-        )
-        console.log('user::: ', user)
-        return user;
-    } catch (error) {
-        throw error
-    }
-}
+// let getUserByEmail = async (email) => {
+//     // console.log('email service ::', email)
+//     try {
+//         let user = await db.User.findOne(
+//             {
+//                 where: {
+//                     email: email
+//                 }
+//             }
+//         )
+//         console.log('user::: ', user)
+//         return user;
+//     } catch (error) {
+//         throw error
+//     }
+// }
 
-getUserByEmail('sangdtde140025@gmail.com').then(data => console.log(data))
+// getUserByEmail('sangdtde140025@gmail.com').then(data => console.log(data))
+
+
+const otpGenerator = require('otp-generator')
+
+let otp = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
+console.log(otp);

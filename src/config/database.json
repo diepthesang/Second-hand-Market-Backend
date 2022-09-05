@@ -1,9 +1,9 @@
 {
   "development": {
-    "username": "sqluser",
-    "password": "123",
-    "database": "second_hand_market_db",
-    "host": "localhost",
+    "username": "sQ29JOlRi2",
+    "password": "qOyuP7Ky2F",
+    "database": "sQ29JOlRi2",
+    "host": "remotemysql.com",
     "dialect": "mysql",
     "logging": false,
     "query": {

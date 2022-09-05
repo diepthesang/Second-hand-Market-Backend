@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt')
 const JWT = require('jsonwebtoken')
 const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount, findOrCreateNewEmail } = require("../services/auth.services");
-const { sentCodeVerify } = require('../services/mail.services');
-var VERIFYCODEMAIL = '';
+const { sentOTP } = require('../services/mail.services');
+var OTP = '';
 var newEmail = '';
 var newPassword = '';
 var newConfirmPassword = '';
@@ -52,8 +52,7 @@ module.exports = {
 
             let checkExistEmail = await getUserByEmail(email);
             if (checkExistEmail === null) {
-                VERIFYCODEMAIL = await sentCodeVerify(email);
-                console.log('VERIFYCODEMAIL:::', VERIFYCODEMAIL)
+                OTP = await sentOTP(email);
                 throw {
                     status: 200,
                     message: 'Ma xac thuc da duoc gui den mail cua ban'
@@ -72,13 +71,11 @@ module.exports = {
         }
     },
     // VERIFY CODE FOR EMAIL
-    verifyMail: async (req, res, next) => {
+    sentOTP: async (req, res, next) => {
         try {
-            const { verifyCode } = req.body
+            const { otp } = req.body
 
-            console.log('VERIFYCODEMAIL in verify route ::', VERIFYCODEMAIL)
-            console.log('verifyCode::', verifyCode);
-            if (verifyCode == VERIFYCODEMAIL) {
+            if (otp == OTP) {
                 let result = await findOrCreateNewEmail(newEmail, newPassword, newFirstName, newLastName)
                 if (result) {
                     throw {
@@ -140,20 +137,22 @@ module.exports = {
                 }
             } else {
                 let hashPassword = checkExistEmail.password
-                bcrypt.compare(password, hashPassword, function (err, result) {
-                    if (result) {
-                        let token = encodeToken(checkExistEmail.userId);
-                        console.log(token);
-                        res.setHeader('Authorization', 'Bearer ' + token)
-                        let error = new Error('Login thanh cong');
-                        error.status = 200
-                        return next(error)
-                    } else {
-                        let error = new Error('Mat khau sai');
-                        error.status = 404
-                        return next(error)
+                const match = await bcrypt.compare(password, hashPassword);
+                if (match) {
+                    let token = encodeToken(checkExistEmail.userId);
+                    console.log(token);
+                    res.setHeader('Authorization', 'Bearer ' + token)
+                    throw {
+                        status: 200,
+                        message: 'Login thanh cong'
                     }
-                })
+                    return next(error)
+                } else {
+                    throw {
+                        status: 404,
+                        message: 'Mat khau sai'
+                    }
+                }
 
             }
 

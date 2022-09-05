@@ -1,6 +1,7 @@
 
 const nodemailer = require('nodemailer')
 const { OAuth2Client } = require('google-auth-library')
+const otpGenerator = require('otp-generator')
 
 const myOAuth2Client = new OAuth2Client(
     process.env.GOOGLE_MAILER_CLIENT_ID,
@@ -12,7 +13,7 @@ myOAuth2Client.setCredentials({
 })
 
 module.exports = {
-    sentCodeVerify: async (email) => {
+    sentOTP: async (email) => {
         try {
 
             const myAccessTokenObject = await myOAuth2Client.getAccessToken()
@@ -31,21 +32,25 @@ module.exports = {
                     accessToken: myAccessToken
                 }
             })
-
-            let verifyCode = Math.floor(Math.random() * (99999 - 10000 + 1) + 10000);
-
+            // TAO MA OTP
+            let otp = otpGenerator.generate(6, {
+                digits: true,
+                lowerCaseAlphabets: false,
+                upperCaseAlphabets: false,
+                specialChars: false
+            });
 
             // mailOption là những thông tin gửi từ phía client lên thông qua API
             const mailOptions = {
                 to: email, // Gửi đến ai?
                 subject: "Team Dev SECOND-HAND-MARKET", // Tiêu đề email
-                html: `<h3>Mã xác thực của bạn là: <u style="color:blue">${verifyCode}</u></h3>` // Nội dung email
+                html: `<h3>Mã xác thực của bạn là: <u style="color:blue">${otp}</u></h3>` // Nội dung email
             }
-            console.log(verifyCode)
+
 
             // Gọi hành động gửi email
             await transport.sendMail(mailOptions)
-            return verifyCode
+            return otp
         } catch (error) {
 
         }
