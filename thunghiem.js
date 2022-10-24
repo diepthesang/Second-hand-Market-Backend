@@ -1,72 +1,58 @@
-const db = require("./src/db/models");
-const { v4: uuidv4 } = require('uuid');
+const { get } = require('http');
+const db = require('./src/db/models');
+const { getImagesProduct, getPostByCateId, getFirstImageForProduct } = require('./src/services/common.service');
 
 
-// async function findandcreate() {
-//     const [user, created] = await db.User.findOrCreate(
+// const getPostById = async () => {
+//     return await db.Post.findOne(
 //         {
 //             where: {
-//                 email: '13@gmail.com'
+//                 id: 161
 //             },
+//             raw: true,
+//             nest: true,
+//             include: [
+//                 {
+//                     model: db.ListImageProduct,
+//                     as: 'listImage'
+//                 },
+//                 {
+//                     model: db.User,
+//                     // as: 'userInfo'
+//                 },
+//                 // db.User
+//                 // {
+//                 //     model: db.ListImageProduct,
+//                 //     // attributes: {
+//                 //     //     exclude: ['id', 'userId']
+//                 //     // },
 
-//             defaults: {
-//                 userId: uuidv4(),
-//                 userName: 'diepthesang',
-//                 address: 'antuongtay-hoaian-binhdinh'
-//             }
-//         }
-//     );
-
-//     return created;
+//                 // }
+//             ],
+//         })
 // }
 
-// // findandcreate().then(rs => console.log(rs))
+
+// getPostById().then(data => {
+//     console.log(data)
+// })
 
 
-// // async function upserMethod() {
-// //     const [objectt, created] = await db.User.upsert(
-// //         {
-// //             userId: uuidv4(),
-// //             userName: 'san3',
-// //             email: 'san3'
-// //         }
-// //     )
-// //     console.log(objectt);
-// //     console.log(created)
-// // }
+const getData = async () => {
+    try {
+        // const id = req.params.id
+        const data = await getPostByCateId(2)
+        for (let item in data) {
+            // console.log(object);
+            data[item].image = await getFirstImageForProduct(data[item].id);
+            // console.log(product)
+
+        }
+        return data
+    } catch (error) {
+        // next(error)
+    }
+}
 
 
-// // upserMethod()
-
-
-
-// var name = '   diep the sang     f  '
-
-// // var newName = name.replace(/\s/g, '')
-// var newName = name.trim().length
-// console.log(newName);
-
-// let getUserByEmail = async (email) => {
-//     // console.log('email service ::', email)
-//     try {
-//         let user = await db.User.findOne(
-//             {
-//                 where: {
-//                     email: email
-//                 }
-//             }
-//         )
-//         console.log('user::: ', user)
-//         return user;
-//     } catch (error) {
-//         throw error
-//     }
-// }
-
-// getUserByEmail('sangdtde140025@gmail.com').then(data => console.log(data))
-
-
-const otpGenerator = require('otp-generator')
-
-let otp = otpGenerator.generate(6, { digits: true, lowerCaseAlphabets: false, upperCaseAlphabets: false, specialChars: false });
-console.log(otp);
+getData().then(data => { console.log(data); })

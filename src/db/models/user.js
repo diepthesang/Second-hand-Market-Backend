@@ -11,10 +11,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      // User.belongsTo(models.Post,
+      //   {
+      //     foreignKey: 'userId'
+      //   })
     }
   }
   User.init({
     userId: DataTypes.STRING,
+    emailType: DataTypes.ENUM('google', 'facebook', 'local'),
     email: DataTypes.STRING,
     password: DataTypes.STRING,
     firstName: DataTypes.STRING,
@@ -23,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
     address: DataTypes.STRING,
     phone: DataTypes.STRING,
     starRating: DataTypes.INTEGER,
-    role: DataTypes.STRING,
+    role: DataTypes.ENUM('ROLE_USER', 'ROLE_ADMIN'),
     banUser: DataTypes.BOOLEAN
   }, {
     sequelize,

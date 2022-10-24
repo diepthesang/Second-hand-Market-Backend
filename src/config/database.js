@@ -4,8 +4,12 @@ module.exports = {
     "username": process.env.USERNAME_DB,
     "password": process.env.PASSWORD_DB,
     "database": process.env.DATABASE_NAME,
-    "host": "remotemysql.com",
+    // "host": "remotemysql.com",
+    "host": "localhost",
     "dialect": "mysql",
+    // "dialectOptions": {
+    //   "supportBigNumber": true,
+    // },
     "logging": false,
     "query": {
       "raw": true

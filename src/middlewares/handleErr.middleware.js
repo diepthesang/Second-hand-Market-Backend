@@ -11,6 +11,7 @@ module.exports = {
         return res.status(err.status || 500).json(
             {
                 status: err.status || 500,
+                codeMessage: err.codeMessage || 'ERR',
                 message: err.message || 'Internal Server Error'
             }
         )

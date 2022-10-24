@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt')
-const JWT = require('jsonwebtoken')
-const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount, findOrCreateNewEmail } = require("../services/auth.services");
-const { sentOTP } = require('../services/mail.services');
+const JWT = require('jsonwebtoken');
+const ms = require('ms');
+const httpMessage = require('../Helps/httpMessage');
+const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount, findOrCreateNewEmail } = require("../services/auth.service");
+const { sentOTP } = require('../services/mail.service');
 var OTP = '';
 var newEmail = '';
 var newPassword = '';
@@ -23,8 +25,8 @@ module.exports = {
 
             if (!email || !newPassword || !newConfirmPassword || !newFirstName || !newLastName) {
                 throw {
-                    status: 400,
-                    message: 'Ban can fai dien day du thong tin',
+                    status: 404,
+                    message: httpMessage.ERR_FIELD
                 }
 
             }
@@ -32,36 +34,43 @@ module.exports = {
             if (!validateEmail(email)) {
                 throw {
                     status: 400,
-                    message: 'Định dạng email không đúng',
+                    message: httpMessage.ERR_FORMAT_EMAIL,
                 }
             }
 
             if (newPassword.length <= 6) {
                 throw {
                     status: 400,
-                    message: 'Mat khau phai chua nhieu hon 6 ki tu',
+                    message: httpMessage.ERR_FORMAT_PASSWORD,
                 }
             }
 
             if (confirmPassword !== password) {
                 throw {
                     status: 400,
-                    message: 'Mat khau xac thuc khong chinh xac',
+                    message: httpMessage.ERR_CONFIRM_PASSWORD,
                 }
             }
 
             let checkExistEmail = await getUserByEmail(email);
             if (checkExistEmail === null) {
                 OTP = await sentOTP(email);
-                throw {
-                    status: 200,
-                    message: 'Ma xac thuc da duoc gui den mail cua ban'
+                if (OTP === undefined) {
+                    throw {
+                        status: 404,
+                        message: httpMessage.ERR_SEND_OTP
+                    }
                 }
+                console.log('OTP:::', OTP)
+                return res.status(200).json({
+                    status: 200,
+                    message: 'Gui OTP thanh cong'
+                })
 
             } else {
                 throw {
                     status: 404,
-                    message: 'Dia chi email da duoc su dung'
+                    message: httpMessage.ERR_EXIST_EMAIL
                 }
             }
 
@@ -70,28 +79,33 @@ module.exports = {
             return next(error)
         }
     },
+
     // VERIFY CODE FOR EMAIL
     sentOTP: async (req, res, next) => {
         try {
             const { otp } = req.body
 
+            console.log('OTP:::', OTP);
+
             if (otp == OTP) {
                 let result = await findOrCreateNewEmail(newEmail, newPassword, newFirstName, newLastName)
                 if (result) {
-                    throw {
-                        status: 200,
-                        message: 'Dang ki tai khoan thanh cong'
-                    }
+                    return res.status(200).json(
+                        {
+                            status: 200,
+                            message: 'OTP chinh xac'
+                        }
+                    )
                 } else {
                     throw {
                         status: 404,
-                        message: 'Khong the dang ki tai khoan'
+                        message: httpMessage.ERR_REGISTER_ACCOUNT,
                     }
                 }
             } else {
                 throw {
                     status: 404,
-                    message: 'Ma xac thuc khong dung'
+                    message: httpMessage.ERR_CONFIRM_OTP
                 }
             }
 
@@ -109,7 +123,8 @@ module.exports = {
             if (!email || !password) {
                 throw {
                     status: 400,
-                    message: 'Ban can dien day du thong tin'
+                    codeMessage: 'ERR_FIELD',
+                    message: httpMessage.ERR_FIELD
                 }
             };
 
@@ -117,43 +132,58 @@ module.exports = {
             if (!validateEmail(email)) {
                 throw {
                     status: 400,
-                    message: 'Email khong duoc xac thuc'
+                    codeMessage: 'INVALID_EMAIL',
+                    message: httpMessage.ERR_FORMAT_EMAIL
                 }
             }
 
             if (password.replace(/\s/g, '').length <= 6) {
                 throw {
                     status: 400,
-                    message: 'Mat khau phai chua nhieu hon 6 ki tu'
+                    codeMessage: 'ERR_FORMAT_PASSWORD',
+                    message: httpMessage.ERR_FORMAT_PASSWORD
                 }
             }
 
             let checkExistEmail = await getUserByEmail(email)
+            console.log('checkExistEmail::::', !checkExistEmail);
 
             if (!checkExistEmail) {
                 throw {
                     status: 400,
-                    message: 'Email khong ton tai'
+                    codeMessage: 'ERR_EXIST_EMAIL',
+                    message: httpMessage.ERR_EXIST_EMAIL
                 }
+
             } else {
                 let hashPassword = checkExistEmail.password
                 const match = await bcrypt.compare(password, hashPassword);
                 if (match) {
                     let token = encodeToken(checkExistEmail.userId);
                     console.log(token);
+                    res.cookie('access_token', token, {
+                        maxAge: ms('365 days'),
+                        httpOnly: true,
+                        secure: false,
+
+                    },)
+
                     res.setHeader('Authorization', 'Bearer ' + token)
-                    throw {
-                        status: 200,
-                        message: 'Login thanh cong'
-                    }
-                    return next(error)
+
+                    return res.status(200).json(
+                        {
+                            status: 200,
+                            codeMessage: 'SUCCESS',
+                            message: 'Login thanh cong'
+                        }
+                    )
                 } else {
                     throw {
                         status: 404,
-                        message: 'Mat khau sai'
+                        codeMessage: 'ERR_PASSWORD',
+                        message: httpMessage.ERR_PASSWORD,
                     }
-                }
-
+                }   
             }
 
         } catch (error) {
@@ -171,55 +201,59 @@ module.exports = {
             const { phone, address, password, confirmPassword, email, firstName, lastName, avatarImg } = req.body
             console.log({ phone, address, password, confirmPassword, email, firstName, lastName, avatarImg });
             if (!phone || !address || !email || !firstName || !lastName) {
-                err.message = 'Can dien day du thong tin'
-                err.status = 422;
-                return next(err)
+                throw {
+                    status: 400,
+                    message: httpMessage.ERR_FIELD
+                }
             }
-            console.log('>>>>>>>>>>>>>>>>>');
 
             let phoneNumber = Number(phone)
             if (!Number.isInteger(phoneNumber)) {
-                err.message = 'so dien thoai phai la integer'
-                err.status = 422;
-                return next(err)
+
+                throw {
+                    status: 422,
+                    message: httpMessage.ERR_FORMAT_PHONE,
+                }
             }
-            console.log('>>>>>>>>>>>>>>>>>');
 
             if (phone.length <= 8 || phone.length >= 12) {
-                err.message = 'So dien thoai phai tu 9 den 11 so'
-                err.code = 422;
-                return next(err)
+                throw {
+                    status: 422,
+                    message: httpMessage.ERR_9_TO_11_NUMBERPHONE,
+                }
             }
-
-            console.log('>>>>>>>>>3>>>>>>>>');
 
             if (password && password.replace(/\s/g, '').length <= 6) {
-                err.message = 'mat khau phai chua nhieu hon 6 ki tu'
-                err.status = 422;
-                return next(err);
+                throw {
+                    status: 422,
+                    message: httpMessage.ERR_FORMAT_PASSWORD
+                }
             }
-            console.log('>>>>>>>>>4>>>>>>>>');
 
             if (confirmPassword !== password) {
-                err.message = 'Mat khau xac thuc khong chinh xac'
-                err.status = 422
-                return next(err)
+                throw {
+                    status: 422,
+                    message: httpMessage.ERR_CONFIRM_PASSWORD
+                }
             }
-            console.log('>>>>>>>5>>>>>>>>>>');
 
             if (email && !validateEmail(email)) {
-                err.message = 'Định dạng email không đúng';
-                err.status = 422
-                return next(err)
+                throw {
+                    status: 400,
+                    message: httpMessage.ERR_FORMAT_EMAIL,
+                }
             }
-            console.log(email)
             let checkExistEmail = await getUserByEmail(email)
-            console.log('>>>>>>>>>6>>>>>>>>');
-            console.log(req.user.email);
             if (checkExistEmail && checkExistEmail.email !== req.user.email) {
-                err.message = 'Email da ton tai';
-                err.status = 422
-                return next(err)
+                // throw {
+                //     status: 400,
+                //     message: httpMessage.ERR_EXIST_EMAIL,
+                // }
+
+                return res.status(400).json({
+                    status: 400,
+                    message: ' thu nghiem '
+                })
             }
 
             let result = await updateAccount(userId, avatarImg || 'hinhnek', phone, address, password, email, firstName, lastName);
@@ -228,19 +262,36 @@ module.exports = {
                 return res.status(200).json(
                     {
                         status: 200,
-                        message: 'Cap nhat tai khoan thanh cong'
+                        message: httpMessage.SUCCESS_UPDATE_ACCOUNT,
                     }
                 )
             } else {
-                err.message = result;
-                err.status = 500;
-                return next(err)
-            }
+                throw {
+                    status: 200,
+                    message: result
+                }
 
+            }
         } catch (error) {
-            err.message = error;
-            err.status = 500;
             return next(err)
+        }
+    },
+
+    loginAccountGoogle: async (req, res, next) => {
+        try {
+            let token = encodeToken(req.user.userId);
+            console.log('>>token<<')
+            console.log(token);
+            res.setHeader('Authorization', 'Bearer ' + token)
+            return res.status(200).json({
+                status: 200,
+                message: 'Login thanh cong'
+            })
+
+
+        }
+        catch (error) {
+            next(error)
         }
     }
 }
@@ -263,7 +314,7 @@ let encodeToken = (userId) => {
         },
         process.env.JWT_SECRETKEY,
         {
-            expiresIn: 60 * 60 * 12
+            expiresIn: ms('365 days')
         }
     )
 

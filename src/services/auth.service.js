@@ -3,6 +3,17 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 
 module.exports = {
+    /**
+     * 
+     * @param {string} userName 
+     * @param {string} email 
+     * @param {string} password 
+     * @param {string} firstName 
+     * @param {string} lastName 
+     * @param {string} address 
+     * @param {string} phone 
+     * @returns 
+     */
     createAccount: async (userName, email, password, firstName, lastName, address, phone) => {
         try {
             bcrypt.hash(password, 8).then(function (hashPassword) {
@@ -25,17 +36,21 @@ module.exports = {
 
             return 'success'
         } catch (error) {
-            return error
+            throw error
         }
     },
 
+    /**
+     * return a user finded by email
+     * @param {string} email 
+     * @returns {Promise<string>} user
+     */
     getUserByEmail: async (email) => {
-        console.log('email service ::', email)
         try {
             let user = await db.User.findOne(
                 {
                     where: {
-                        email: email
+                        email
                     }
                 }
             )
@@ -46,24 +61,32 @@ module.exports = {
     },
 
     getUserByUserName: async (userName) => {
-        return await db.User.findOne(
-            {
-                where:
+        try {
+            return await db.User.findOne(
                 {
-                    userName
+                    where:
+                    {
+                        userName
+                    }
                 }
-            }
-        )
+            )
+        } catch (error) {
+            throw error
+        }
     },
 
     getUserByUserId: async (userId) => {
-        return await db.User.findOne(
-            {
-                where: {
-                    userId
+        try {
+            return await db.User.findOne(
+                {
+                    where: {
+                        userId
+                    }
                 }
-            }
-        )
+            )
+        } catch (error) {
+            throw error
+        }
     },
 
     updateAccount: async (userId, avatarImg, phone, address, password, email, firstName, lastName) => {
@@ -89,13 +112,13 @@ module.exports = {
             return 'success'
 
         } catch (error) {
-            return error
+            throw error
         }
     },
 
     findOrCreateNewEmail: async (email, password, firstName, lastName) => {
         try {
-            const hashPassword = bcrypt.hashSync(password, 8);
+            const _hashPassword = bcrypt.hashSync(password, 5);
             const [user, created] = await db.User.findOrCreate(
                 {
                     where: {
@@ -104,7 +127,7 @@ module.exports = {
 
                     defaults: {
                         userId: uuidv4(),
-                        password: hashPassword,
+                        password: _hashPassword,
                         firstName,
                         lastName,
                     }
