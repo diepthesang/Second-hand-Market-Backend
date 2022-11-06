@@ -8,6 +8,7 @@ module.exports = {
     },
 
     handleErr: (err, req, res, next) => {
+        console.log('########errMsg#########', err.message)
         return res.status(err.status || 500).json(
             {
                 status: err.status || 500,

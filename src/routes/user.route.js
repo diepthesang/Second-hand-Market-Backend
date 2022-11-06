@@ -3,10 +3,10 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
-const { getPostByCateId } = require('../controllers/common.controller');
+const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
 
 
 route.post('/createPost', passport.authenticate('jwt', { session: false }), uploadMultiImage, createPost)
@@ -17,11 +17,35 @@ route.get('/userInfo', passport.authenticate('jwt', { session: false }), getUser
 
 route.put('/updateLikePost', passport.authenticate('jwt', { session: false }), updateLikePost)
 
-route.get('/postShowByUserId/activeId/:activeId', passport.authenticate('jwt', { session: false }), getPostShowByUserId)
+route.get('/post/activeId/:activeId/page/:page', passport.authenticate('jwt', { session: false }), getPostShowByUserId)
 
 route.put('/updateActiveIdPost', passport.authenticate('jwt', { session: false }), updateActiveIdPost)
 
 route.get('/allPost', passport.authenticate('jwt', { session: false }), getAllPostByUserId)
+
+route.post('/likePost', passport.authenticate('jwt', { session: false }), likePost);
+
+route.post('/unlikePost', passport.authenticate('jwt', { session: false }), unlikePost);
+
+route.get('/currentLikePost/:postId', passport.authenticate('jwt', { session: false }), getCurrentLikePost);
+
+route.get('/currentLikePostByUser/user/:userId', passport.authenticate('jwt', { session: false }), getCurrentLikePostByUser);
+
+route.get('/post/user/:id', passport.authenticate('jwt', { session: false }), getPostIsShowingByUserId);
+
+route.put('/updateProfile', passport.authenticate('jwt', { session: false }), uploadSingleImage, updateProfileByUser);
+
+route.post('/addPostToCart', passport.authenticate('jwt', { session: false }), addPostToCart);
+route.get('/postCart/checkout', passport.authenticate('jwt', { session: false }), getPostToCheckout)
+
+route.get('/postCart/:page', passport.authenticate('jwt', { session: false }),
+  getPostCartByUser);
+
+route.delete('/postCart/remove/:postId', passport.authenticate('jwt', { session: false }), removePostCartByPostId);
+
+route.put('/postCart/checked', passport.authenticate('jwt', { session: false }), checkPostCartToCheckout);
+
+
 
 
 module.exports = route;

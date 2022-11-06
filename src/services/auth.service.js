@@ -16,7 +16,7 @@ module.exports = {
      */
     createAccount: async (userName, email, password, firstName, lastName, address, phone) => {
         try {
-            bcrypt.hash(password, 8).then(function (hashPassword) {
+            return bcrypt.hash(password, 8).then(function (hashPassword) {
                 db.User.create(
                     {
                         userId: uuidv4(),
@@ -32,11 +32,11 @@ module.exports = {
                 )
             })
 
-
-
             return 'success'
+
+
         } catch (error) {
-            throw error
+            return error
         }
     },
 
@@ -56,7 +56,7 @@ module.exports = {
             )
             return user;
         } catch (error) {
-            throw error
+            return error
         }
     },
 
@@ -71,7 +71,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            throw error
+            return error
         }
     },
 
@@ -85,7 +85,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            throw error
+            return error
         }
     },
 
@@ -112,7 +112,7 @@ module.exports = {
             return 'success'
 
         } catch (error) {
-            throw error
+            return error
         }
     },
 
@@ -136,7 +136,7 @@ module.exports = {
 
             return created;
         } catch (error) {
-            throw error;
+            return error;
         }
 
     }

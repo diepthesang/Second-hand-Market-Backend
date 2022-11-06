@@ -11,10 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Post.hasMany(models.ListImageProduct,
+      Post.hasMany(models.PostImage,
         {
           sourceKey: 'id',
-          foreignKey: 'proId',
+          foreignKey: 'postId',
         });
 
       Post.hasOne(models.User,
@@ -29,23 +29,33 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey: 'id'
         })
 
-      Post.hasOne(models.StatusCurrentProduct,
+      Post.hasOne(models.PostCondition,
         {
           sourceKey: 'statusId',
           foreignKey: 'id'
         })
 
-      Post.hasOne(models.MadeIn,
+      Post.hasOne(models.Origin,
         {
-          sourceKey: 'madeInId',
+          sourceKey: 'originId',
           foreignKey: 'id'
         })
 
-      Post.hasOne(models.StatusActivePost,
+      Post.hasOne(models.PostActive,
         {
           sourceKey: 'activeId',
           foreignKey: 'id'
         })
+
+      Post.hasOne(models.Category, {
+        sourceKey: 'cateId',
+        foreignKey: 'id'
+      });
+
+      Post.hasMany(models.Like, {
+        sourceKey: 'id',
+        foreignKey: 'postId',
+      })
 
 
 
@@ -56,20 +66,19 @@ module.exports = (sequelize, DataTypes) => {
   Post.init({
     cateId: DataTypes.STRING,
     // proId: DataTypes.STRING,
-    name: DataTypes.STRING,
+    title: DataTypes.STRING,
     statusId: DataTypes.ENUM('1', '2', '3'),
     warrantyId: DataTypes.INTEGER,
-    madeInId: DataTypes.INTEGER,
+    originId: DataTypes.INTEGER,
     description: DataTypes.TEXT,
-    free: DataTypes.BOOLEAN,
     price: DataTypes.BIGINT,
     province: DataTypes.STRING,
     district: DataTypes.STRING,
     ward: DataTypes.STRING,
-    address: DataTypes.STRING,
+    street: DataTypes.STRING,
     activeId: DataTypes.ENUM('1', '2', '3', '4', '5'),
     userId: DataTypes.STRING,
-    liked: DataTypes.BOOLEAN,
+    likeCount: DataTypes.BIGINT,
   }, {
     sequelize,
     modelName: 'Post',

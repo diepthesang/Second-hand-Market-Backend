@@ -1,10 +1,11 @@
+const { Op } = require("sequelize")
 const db = require("../db/models");
 
 module.exports = {
 
     getAllCountry: async () => {
         try {
-            return await db.MadeIn.findAll();
+            return await db.Origin.findAll();
 
         } catch (error) {
             return error
@@ -50,7 +51,7 @@ module.exports = {
 
     getAllStatusCurrentProduct: async () => {
         try {
-            return await db.StatusCurrentProduct.findAll()
+            return await db.PostCondition.findAll()
         } catch (error) {
             return error
         }
@@ -63,7 +64,7 @@ module.exports = {
                     raw: true,
                     nest: true,
                     include: {
-                        model: db.ListImageProduct
+                        model: db.PostImage
                     }
 
                 }
@@ -78,7 +79,8 @@ module.exports = {
             return await db.Post.findAll(
                 {
                     where: {
-                        cateId: id
+                        cateId: id,
+                        activeId: 1
                     },
                     // raw: true,
                     // nest: true,
@@ -92,12 +94,12 @@ module.exports = {
         }
     },
 
-    getFirstImageForProduct: async (proId) => {
+    getFirstImageForProduct: async (postId) => {
         try {
-            return await db.ListImageProduct.findOne(
+            return await db.PostImage.findOne(
                 {
                     where: {
-                        proId
+                        postId
                     }
 
                 }
@@ -122,11 +124,13 @@ module.exports = {
     },
 
     getPostByPostId: async (postId) => {
+        console.log('postId:::', postId)
         try {
-            return await db.Post.findAll(
+            const post = await db.Post.findOne(
                 {
                     where: {
-                        id: postId
+                        id: postId,
+                        activeId: 1
                     },
                     raw: true,
                     nest: true,
@@ -138,17 +142,51 @@ module.exports = {
                             model: db.Warranty
                         },
                         {
-                            model: db.StatusCurrentProduct
+                            model: db.PostCondition
                         },
                         {
-                            model: db.MadeIn
+                            model: db.Origin
                         },
                         {
-                            model: db.StatusActivePost
+                            model: db.PostActive
                         },
+                        {
+                            model: db.Category,
+                        }
 
                     ],
 
+                }
+            )
+            const listImage = await db.PostImage.findAll(
+                {
+                    where: {
+                        postId
+                    }
+                }
+            );
+
+            console.log('listImage::::', listImage);
+
+            const data = {
+                ...post,
+                listImage
+            }
+
+            return data
+
+        } catch (error) {
+            return error
+        }
+    },
+
+    getImagesProduct: async (postId) => {
+        try {
+            return await db.PostImage.findAll(
+                {
+                    where: {
+                        postId
+                    }
                 }
             )
         } catch (error) {
@@ -156,17 +194,112 @@ module.exports = {
         }
     },
 
-    getImagesProduct: async (proId) => {
+    getCateById: async (id) => {
         try {
-            return await db.ListImageProduct.findAll(
+            return await db.Category.findOne(
                 {
                     where: {
-                        proId
+                        id
                     }
                 }
             )
         } catch (error) {
             return error
+        }
+    },
+
+    getAllPostByUserId: async (userId) => {
+        try {
+            return await db.Post.findAll(
+                {
+                    where: {
+                        userId,
+                        activeId: 1
+                    },
+
+                    // raw: true,
+                    // nest: true,
+                    // include: {
+                    //     model: db.ListImageProduct
+                    // }
+                }
+            )
+        } catch (error) {
+            return error
+        }
+    },
+
+    getUserByUSerId: async (userId) => {
+        try {
+            return await db.User.findOne(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            )
+        } catch (error) {
+            return error
+        }
+    },
+
+    getPostByPlace: async (province, page) => {
+        const _page = page * 12 - 12
+        try {
+            return await db.Post.findAndCountAll(
+                {
+                    limit: 12,
+                    offset: _page,
+                    where: {
+                        province,
+                        activeId: 1,
+                    }
+                }
+            )
+        } catch (error) {
+            return error
+        }
+    },
+
+    getPostByName: async (search) => {
+        try {
+            return await db.Post.findAll(
+                {
+                    where: {
+                        activeId: 1,
+                        name: { [Op.substring]: `%${search}` },
+                    }
+                }
+            )
+        } catch (error) {
+            return error
+        }
+    },
+
+    getPostIsShowingByUserId: async (userId, userAccountId) => {
+        // userId : user cua shop
+        // userAccountId: user dang dang nhap
+        try {
+            const data = await db.Post.findAll(
+                {
+                    where: {
+                        userId,
+                        activeId: 1,
+                    },
+                    raw: true,
+                    nest: true,
+                    include: {
+                        model: db.Like,
+                        where: {
+                            userId: userAccountId,
+                        },
+                        required: false,
+                    }
+                }
+            );
+            return data;
+        } catch (error) {
+            return error;
         }
     }
 

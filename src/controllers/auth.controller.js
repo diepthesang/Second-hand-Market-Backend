@@ -4,6 +4,7 @@ const ms = require('ms');
 const httpMessage = require('../Helps/httpMessage');
 const { checkExistEmail, createAccount, getUserByEmail, getUserByUserName, updateAccount, findOrCreateNewEmail } = require("../services/auth.service");
 const { sentOTP } = require('../services/mail.service');
+const { validateEmail } = require('./helps.controller');
 var OTP = '';
 var newEmail = '';
 var newPassword = '';
@@ -160,13 +161,15 @@ module.exports = {
                 const match = await bcrypt.compare(password, hashPassword);
                 if (match) {
                     let token = encodeToken(checkExistEmail.userId);
-                    console.log(token);
-                    res.cookie('access_token', token, {
-                        maxAge: ms('365 days'),
-                        httpOnly: true,
-                        secure: false,
+                    console.log("token:::", token);
+                    // res.cookie('access_token', token, {
+                    //     maxAge: ms('365 days'),
+                    //     httpOnly: true,
+                    //     secure: false,
 
-                    },)
+                    // },);
+
+
 
                     res.setHeader('Authorization', 'Bearer ' + token)
 
@@ -183,7 +186,7 @@ module.exports = {
                         codeMessage: 'ERR_PASSWORD',
                         message: httpMessage.ERR_PASSWORD,
                     }
-                }   
+                }
             }
 
         } catch (error) {
@@ -296,14 +299,6 @@ module.exports = {
     }
 }
 
-
-const validateEmail = (email) => {
-    return String(email)
-        .toLowerCase()
-        .match(
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        );
-};
 
 
 let encodeToken = (userId) => {

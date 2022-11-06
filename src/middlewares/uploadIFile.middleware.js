@@ -23,5 +23,5 @@ const upload = multer({ storage: storage, });
 
 module.exports = {
     uploadMultiImage: upload.array('images', 6),
-    uploadSingleImage: upload.single('cateLogoImg'),
+    uploadSingleImage: upload.single('image'),
 }

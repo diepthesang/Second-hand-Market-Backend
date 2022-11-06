@@ -1,5 +1,8 @@
 const db = require("../db/models")
 const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const { create } = require("domain");
+const { Op } = require("sequelize");
 
 module.exports = {
     createCategory: async (cateName, cateLogoImg, cateParent) => {
@@ -9,7 +12,6 @@ module.exports = {
                     cateName
                 },
                 defaults: {
-                    // cateId: uuidv4(),
                     cateName,
                     cateLogoImg,
                     cateParent
@@ -18,45 +20,47 @@ module.exports = {
 
             return created;
         } catch (error) {
-            return error
+            throw error
         }
     },
 
-    createImgPost: async (proImg, proId, userId) => {
+    createImgPost: async (imagePath, postId, userId) => {
         try {
-            db.ListImageProduct.create(
+            db.PostImage.create(
                 {
-                    proImg,
-                    proId,
+                    imagePath,
+                    postId,
                     userId,
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
     createPost: async (cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, userId) => {
         try {
+            free === null ? free = 0 : free;
+            console.log('freee:::', free);
             return await db.Post.create(
                 {
                     cateId,
-                    name,
+                    title: name,
                     statusId,
                     warrantyId,
-                    madeInId,
+                    originId: madeInId,
                     description,
                     free,
                     price,
                     province,
                     district,
                     ward,
-                    address,
+                    street: address,
                     userId,
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -70,7 +74,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -88,14 +92,17 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
-    getPostShowByUserId: async (userId, activeId) => {
+    getPostShowByUserId: async (userId, activeId, page) => {
         try {
-            return await db.Post.findAll(
+            const _page = page * 5 - 5;
+            return await db.Post.findAndCountAll(
                 {
+                    limit: 5,
+                    offset: _page,
                     where: {
                         userId,
                         activeId,
@@ -103,7 +110,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -122,7 +129,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -136,10 +143,221 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
+        }
+    },
+
+    likePost: async (userId, postId) => {
+        try {
+            return await db.Like.findOrCreate(
+                {
+                    where: {
+                        userId,
+                        postId,
+                    }
+                }
+            );
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    unlikePost: async (userId, postId) => {
+        try {
+            return await db.Like.destroy(
+                {
+                    where: {
+                        userId,
+                        postId,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getCurrentLikePost: async (userId, postId) => {
+        try {
+            return await db.Like.findOne(
+                {
+                    where: {
+                        userId,
+                        postId,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getCurentLikePostByUser: async (userId,) => {
+        try {
+            return await db.Post.findAll(
+                {
+                    where: {
+                        userId,
+                        activeId: 1,
+                    },
+                    raw: true,
+                    nest: true,
+                    include: {
+                        model: db.Like
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateProfileByUser: async (userId, firstName, lastName, email, phone, address, changePassword, imagePath) => {
+        console.log('service:::::', {
+            userId, firstName, lastName, email, address, changePassword, imagePath
+        });
+
+
+
+        try {
+
+            if (changePassword === undefined) {
+                return await db.User.update(
+                    {
+                        firstName,
+                        lastName,
+                        email,
+                        phone,
+                        address,
+                        password: changePassword,
+                        avatarImg: imagePath,
+                    },
+                    {
+                        where: {
+                            userId
+                        }
+                    }
+                )
+            } else {
+                return bcrypt.hash(changePassword, 8).then(async function (hashPassword) {
+                    await db.User.update(
+                        {
+                            firstName,
+                            lastName,
+                            email,
+                            phone,
+                            address,
+                            password: hashPassword,
+                            avatarImg: imagePath,
+                        },
+                        {
+                            where: {
+                                userId
+                            }
+                        }
+                    )
+                });
+
+
+            }
+
+            // return 'success'
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    addPostToCart: async (userId, postId) => {
+        try {
+            const [row, created] = await db.Cart.findOrCreate(
+                {
+                    where: {
+                        postId,
+                        userId,
+                    },
+                    defaults: {
+                        postId,
+                        userId
+                    }
+                }
+            );
+            return created;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPostCartByUser: async (userId, page) => {
+        let _page = page * 5 - 5;
+        try {
+            const data = await db.Cart.findAndCountAll(
+                {
+                    limit: 5,
+                    offset: _page,
+                    where: {
+                        userId
+                    },
+                    raw: true,
+                    nest: true,
+                    include: {
+                        model: db.Post
+                    }
+                }
+            )
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    removePostCartByPostId: async (postId, userId) => {
+        try {
+            return await db.Cart.destroy(
+                {
+                    where: {
+                        postId,
+                        userId,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPostToCheckout: async (userId, ...postId) => {
+        try {
+            return await db.Cart.findAll(
+                {
+                    where: {
+                        userId,
+                        postId: {
+                            [Op.not]: [...postId]
+                        }
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    checkPostCartToCheckout: async (checked, postId, userId) => {
+        try {
+            return await db.Cart.update(
+                {
+                    checked
+                },
+                {
+                    where: {
+                        postId,
+                        userId,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error
         }
     }
-
-
-
 }
