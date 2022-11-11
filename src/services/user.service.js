@@ -359,5 +359,89 @@ module.exports = {
         } catch (error) {
             throw error
         }
+    },
+
+    getPostChecked: async (checked) => {
+
+        try {
+            return await db.Cart.findAll(
+                {
+                    where: {
+                        checked: true
+                    },
+                    raw: true,
+                    nest: true,
+                    include: {
+                        model: db.Post
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getAmountPostToCheckout: async () => {
+        try {
+            const amount = await db.Cart.sum('price',
+                {
+                    where: {
+                        checked: true
+                    },
+                    raw: true,
+                    nest: true,
+                    include: {
+                        model: db.Post
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    createPayment: async (status, userId, amount, payment, paymentInfo, message) => {
+        try {
+            const data = await db.Transaction.create(
+                {
+                    status,
+                    userId,
+                    amount,
+                    payment,
+                    paymentInfo,
+                    message,
+                }
+            );
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    removePostInCart: async (userId) => {
+        try {
+            const data = await db.Cart.destroy(
+                {
+                    where: {
+                        checked: true,
+                        userId,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    createListPostOrder: async (listPostOrder) => {
+        try {
+            const data = await db.Order.bulkCreate(
+                [...listPostOrder]
+            );
+            return data;
+        } catch (error) {
+            throw error;
+        }
     }
+
 }

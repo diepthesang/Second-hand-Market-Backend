@@ -1,11 +1,12 @@
 const httpMessage = require('../Helps/httpMessage');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout } = require('../services/user.service');
+// var paypal = require('paypal-rest-sdk');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
-var fs = require('fs');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
 const { getUserByEmail } = require('../services/auth.service');
 const db = require('../db/models');
+const paypalRestSdk = require('paypal-rest-sdk');
 
 module.exports = {
     createPost: async (req, res, next) => {
@@ -416,7 +417,210 @@ module.exports = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+
+    getPostChecked: async (req, res, next) => {
+        try {
+            const { checked } = req.params;
+            console.log('checked:::', checked)
+            const data = await getPostChecked(checked);
+            for (let item in data) {
+                data[item].image = await getFirstImageForProduct(data[item].postId);
+            }
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getAmountPostToCheckout: async (req, res, next) => {
+        try {
+            const data = await getAmountPostToCheckout();
+
+            res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    // THANH TOAN PAYPAL
+    createPayment: async (req, res, next) => {
+
+        const _userId = req.user.userId;
+        const { status, message } = req.body;
+
+
+        let listPost = await getPostChecked();
+        console.log('*getPostChecked:::', listPost);
+        const _listPostItems = listPost.map(item => {
+            return (
+                {
+                    "name": item.Post.title,
+                    "price": item.Post.price + '.00',
+                    "currency": "USD",
+                    "quantity": 1
+                }
+            )
+        });
+        console.log('listPostItem::::', _listPostItems);
+
+        let listPrice = []
+        listPost.forEach(item => {
+            listPrice.push(item.Post.price)
+        });
+        // tong tien
+        const _total = listPrice.reduce((a, b) => a + b, 0);
+
+        // let _listPostOrder = listPost.map(item => {
+        //     return (
+        //         {
+        //             transactionId: null,
+        //             postId: item.Post.id,
+        //             price: item.Post.price,
+        //             qty: null
+        //         }
+        //     )
+        // })
+
+
+        var create_payment_json = {
+            "intent": "authorize",
+            "payer": {
+                "payment_method": "paypal"
+            },
+            "redirect_urls": {
+                "return_url": "http://localhost:3000/payment/success",
+                "cancel_url": "http://localhost:3000/"
+            },
+            "transactions": [{
+                "item_list": {
+                    "items": _listPostItems
+                },
+                "amount": {
+                    "currency": "USD",
+                    "total": _total + '.00',
+                    // "details": {
+                    //     "subtotal": subTotal,
+                    //     "shipping": '222'
+                    // }
+                },
+                "description": "This is the payment description."
+            }]
+        };
+
+        paypalRestSdk.payment.create(create_payment_json, async function (error, payment) {
+            if (error) {
+                console.log(error.response);
+                throw error;
+            } else {
+                const _payment = payment.payer.payment_method;
+                const _payerId = payment.id;
+                try {
+                    const data = await createPayment(0, _userId, _total, _payment, _payerId, message);
+                    console.log('data_createpayment:::', data);
+                    let _transactionId = data.dataValues.id
+                    console.log('**transactionId:::', data.dataValues.id);
+                    let _listPostOrder = [];
+                    _listPostOrder = listPost.map(item => {
+                        return (
+                            {
+                                transactionId: _transactionId,
+                                postId: item.Post.id,
+                                price: item.Post.price,
+                                qty: null,
+                            }
+                        )
+                    });
+
+                    console.log('** lispostorder:::', _listPostOrder);
+                    await createListPostOrder(_listPostOrder)
+                    await removePostInCart(_userId);
+                } catch (error) {
+                    next(error);
+                }
+
+                for (var index = 0; index < payment.links.length; index++) {
+                    //Redirect user to this endpoint for redirect url
+                    if (payment.links[index].rel === 'approval_url') {
+                        console.log(payment.links[index].href);
+                        return res.status(200).json(
+                            {
+                                status: 200,
+                                url: payment.links[index].href
+                            }
+                        );
+                    }
+                }
+
+
+            }
+        });
+
+
+        // getInfoPaymentSuccess = () => {
+        // const { PayerID } = req.query;
+        var execute_payment_json = {
+            "payer_id": 'this is payerId',
+            "transactions": [{
+                "amount": {
+                    "currency": "USD",
+                    "total": _total + ".00"
+                }
+            }]
+        };
+        // };
+
+        // paypalRestSdk.payment.execute(_paymentId, execute_payment_json, function (error, payment) {
+        //     if (error) {
+        //         console.log(error.response);
+        //         throw error;
+        //     } else {
+        //         console.log("Get Payment Response");
+        //         console.log(JSON.stringify(payment));
+        //     }
+        // });
+    },
+
+    getInfoPaymentSuccess: async (req, res, next) => {
+
+        const { PayerID } = req.query;
+        var execute_payment_json = {
+            "payer_id": PayerID,
+            "transactions": [{
+                "amount": {
+                    "currency": "USD",
+                    "total": "1.00",
+                }
+            }]
+        };
+
+        // console.log(payment);
+        // const _payment = payment.payer.payment_method;
+        // const _payerId = payment.id;
+        // const data = await createPayment(0, _userId, _total, _payment, _payerId, message);
+
+
+
+
+        return res.status(200).json(
+            {
+                status: 200,
+                execute_payment_json
+            }
+        );
+
+
+    },
 
 
 

@@ -267,7 +267,7 @@ module.exports = {
                 {
                     where: {
                         activeId: 1,
-                        name: { [Op.substring]: `%${search}` },
+                        title: { [Op.substring]: `%${search}` },
                     }
                 }
             )

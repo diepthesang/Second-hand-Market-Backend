@@ -3,7 +3,7 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
 const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
@@ -45,6 +45,16 @@ route.delete('/postCart/remove/:postId', passport.authenticate('jwt', { session:
 
 route.put('/postCart/checked', passport.authenticate('jwt', { session: false }), checkPostCartToCheckout);
 
+route.get('/postCart/checked/amount', passport.authenticate('jwt', { session: false }), getAmountPostToCheckout);
+
+route.get('/postCart/checked/:checked', passport.authenticate('jwt', { session: false }),
+  getPostChecked);
+
+// THANH TOAN PAYPAL
+
+route.post('/payment', passport.authenticate('jwt', { session: false }), createPayment);
+
+route.get('/payment/success', getInfoPaymentSuccess);
 
 
 
