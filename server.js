@@ -1,9 +1,7 @@
 const express = require('express');
 var paypal = require('paypal-rest-sdk');
 paypal.configure({
-    'mode': 'sandbox', //sandbox or live
-    'client_id': 'ARzZirSNZsTz81fx3CRH91UkOfGm9R_eERt_dvEepGxSoHy2vA9hCem3taZ4sejcpxPVYlj2ycAuumLR',
-    'client_secret': 'EKvkNUJiv3L_rEXpWUV2LDweUByxlf1RLyyAeVrUrVt_PcuLfYbsijmqo-HF8UZGBjvik-SrjJ7D6wAM'
+    
 });
 const app = express();
 const cookieParser = require('cookie-parser')
