@@ -1,5 +1,5 @@
 const db = require("../db/models")
-const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId } = require("../services/common.service")
+const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost } = require("../services/common.service")
 
 module.exports = {
 
@@ -283,5 +283,20 @@ module.exports = {
             next(error);
         }
     },
+
+    getUserBidPost: async (req, res, next) => {
+        try {
+            const { postId, postAuctionId } = req.params;
+            const data = await getUserBidPost(postId, postAuctionId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    }
 
 }

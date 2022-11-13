@@ -151,8 +151,12 @@ module.exports = {
                             model: db.PostActive
                         },
                         {
+                            model: db.PostAuction,
+                        },
+                        {
                             model: db.Category,
-                        }
+                        },
+
 
                     ],
 
@@ -301,6 +305,34 @@ module.exports = {
         } catch (error) {
             return error;
         }
-    }
+    },
+
+    getUserBidPost: async (postId, postAuctionId,) => {
+        try {
+            return await db.BidOrder.findAll(
+                {
+                    where: {
+                        postId,
+                        postAuctionId,
+                    },
+                    raw: true,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.User
+                        },],
+
+                    order: [
+                        ['priceBid', 'DESC'],
+                    ],
+                }
+
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+
 
 }

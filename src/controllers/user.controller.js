@@ -1,19 +1,20 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
 const { getUserByEmail } = require('../services/auth.service');
 const db = require('../db/models');
 const paypalRestSdk = require('paypal-rest-sdk');
+const { _infoTransformers } = require('passport/lib');
 
 module.exports = {
     createPost: async (req, res, next) => {
         console.log('req.body:::', req.body);
 
         try {
-            const { cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, images } = req.body;
+            const { cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, images, bidOption, startPrice, bidEndTime } = req.body;
 
 
             if (!cateId || !name || !statusId || !warrantyId || !madeInId || !description || !price || !province || !district || !ward || !address) {
@@ -35,19 +36,18 @@ module.exports = {
 
             const post = await createPost(cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, req.user.userId);
 
-            console.log("images::::::", req.files);
-
-            console.log('post::::', post);
-
-
-
-
 
             if (post.dataValues.id) {
                 for (let item in req.files) {
                     let _pathImg = `/upload/${req.files[item].filename}`;
                     await createImgPost(_pathImg, post.dataValues.id, req.user.userId)
                 }
+            };
+
+            // create auction
+
+            if (bidOption === 'true') {
+                await createAuction(post.dataValues.id, bidEndTime, startPrice);
             }
 
             return res.status(200).json({
@@ -609,9 +609,6 @@ module.exports = {
         // const _payerId = payment.id;
         // const data = await createPayment(0, _userId, _total, _payment, _payerId, message);
 
-
-
-
         return res.status(200).json(
             {
                 status: 200,
@@ -621,6 +618,82 @@ module.exports = {
 
 
     },
+
+    createPriceBidByUser: async (req, res, next) => {
+        try {
+            const { postId, priceBid, postAuctionId } = req.body;
+            const data = await createPriceBidByUser(req.user.userId, postId, priceBid, postAuctionId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getHighestBidder: async (req, res, next) => {
+        try {
+            const { postId, postAuctionId } = req.params;
+            const data = await getHighestBidder(postId, postAuctionId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    removeAution: async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const data = await removeAution(id);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getPriceBidByUserUserId: async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const data = await getPriceBidByUserUserId(id, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    createBidSocket: async (req, res, next) => {
+        try {
+            const { bid } = req.body;
+            _io.emit('userBid', bid);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data: bid
+                }
+            )
+        } catch (error) {
+
+        }
+    }
+
 
 
 

@@ -3,7 +3,7 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class BidOrder extends Model {
+  class PostAuction extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -11,21 +11,16 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      BidOrder.hasOne(models.User,
-        {
-          sourceKey: 'userId',
-          foreignKey: 'userId'
-        })
     }
   }
-  BidOrder.init({
+  PostAuction.init({
     postId: DataTypes.INTEGER,
-    userId: DataTypes.STRING,
-    postAuctionId: DataTypes.INTEGER,
-    priceBid: DataTypes.BIGINT,
+    bidEndTime: DataTypes.STRING,
+    priceStart: DataTypes.INTEGER,
+    priceEnd: DataTypes.INTEGER
   }, {
     sequelize,
-    modelName: 'BidOrder',
+    modelName: 'PostAuction',
   });
-  return BidOrder;
+  return PostAuction;
 };

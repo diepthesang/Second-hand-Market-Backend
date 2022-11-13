@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { create } = require("domain");
 const { Op } = require("sequelize");
+const { devNull } = require("os");
 
 module.exports = {
     createCategory: async (cateName, cateLogoImg, cateParent) => {
@@ -40,8 +41,8 @@ module.exports = {
 
     createPost: async (cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, userId) => {
         try {
-            free === null ? free = 0 : free;
-            console.log('freee:::', free);
+            // free === null ? free = 0 : free;
+            // console.log('freee:::', free);
             return await db.Post.create(
                 {
                     cateId,
@@ -63,6 +64,22 @@ module.exports = {
             throw error
         }
     },
+
+
+    createAuction: async (postId, bidEndTime, priceStart) => {
+        try {
+            return await db.PostAuction.create(
+                {
+                    postId,
+                    bidEndTime,
+                    priceStart
+                }
+            );
+        } catch (error) {
+            throw (error);
+        }
+    },
+
 
     getUserInfo: async (userId) => {
         try {
@@ -442,6 +459,105 @@ module.exports = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+
+    createPriceBidByUser: async (userId, postId, priceBid, postAuctionId) => {
+        try {
+            const isUser = await db.BidOrder.findOne(
+                {
+                    where: {
+                        userId,
+                        postId,
+                        postAuctionId,
+                    }
+                }
+            );
+
+            console.log('isUser::::', isUser)
+
+            if (isUser) {
+
+                return await db.BidOrder.update(
+
+                    {
+                        userId,
+                        postId,
+                        postAuctionId,
+                        priceBid
+
+                    },
+                    {
+                        where: {
+                            userId,
+                            postId,
+                            postAuctionId,
+                        }
+                    }
+
+                )
+            } else {
+                return await db.BidOrder.create(
+                    {
+                        userId,
+                        postId,
+                        postAuctionId,
+                        priceBid
+                    }
+                )
+            }
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getHighestBidder: async (postId, postAuctionId) => {
+        try {
+            return await db.BidOrder.findOne({
+                where: {
+                    postId,
+                    postAuctionId
+                },
+                order: [
+                    ['priceBid', 'DESC'],
+                ],
+            })
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    removeAution: async (id) => {
+        try {
+            return db.BidOrder.destroy(
+                {
+                    where: {
+                        id
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPriceBidByUserUserId: async (id, userId) => {
+        try {
+            return await db.BidOrder.findOne(
+                {
+                    where: {
+                        id,
+                        userId,
+                    },
+                    attributes: ['priceBid']
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    
+
 
 }

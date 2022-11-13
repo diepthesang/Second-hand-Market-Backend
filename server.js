@@ -1,7 +1,9 @@
 const express = require('express');
 var paypal = require('paypal-rest-sdk');
 paypal.configure({
-    
+    'mode': 'sandbox', //sandbox or live
+    'client_id': 'ARzZirSNZsTz81fx3CRH91UkOfGm9R_eERt_dvEepGxSoHy2vA9hCem3taZ4sejcpxPVYlj2ycAuumLR',
+    'client_secret': 'EKvkNUJiv3L_rEXpWUV2LDweUByxlf1RLyyAeVrUrVt_PcuLfYbsijmqo-HF8UZGBjvik-SrjJ7D6wAM'
 });
 const app = express();
 const cookieParser = require('cookie-parser')
@@ -24,6 +26,14 @@ var bodyParser = require('body-parser');
 const ms = require('ms');
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+//  config socket io
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const connectSocket = require('./src/Helps/connectSocket');
+const io = new Server(server);
+global._io = io;
+
 // app.use(express.static(path.join(__dirname, 'public')));
 // app.use(express.static('/public'));
 // app.use('src/public/upload', express.static('images'));
@@ -50,13 +60,17 @@ app.use('/user', userRoute)
 
 app.use('/common', commonRoute);
 
+io.on('connection', connectSocket.connection);
+
+
+
 
 // handleError
 app.use(handleErrRoute, handleErr)
 
 let port = process.env.PORT || 3000
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log('server is running on PORT ', port)
 })
 

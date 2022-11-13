@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllNameCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByPostId, getImagesProduct, getFirstImageProduct, getFirstImageProductByPostId, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUserId, getPostByPlace, getPostByCityName, getPostByName } = require('../controllers/common.controller');
+const { getAllNameCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByPostId, getImagesProduct, getFirstImageProduct, getFirstImageProductByPostId, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUserId, getPostByPlace, getPostByCityName, getPostByName, getUserBidPost } = require('../controllers/common.controller');
 const { getCategoryParent } = require('../services/common.service');
 const route = express.Router()
 
@@ -20,5 +20,8 @@ route.get('/firstImageProduct/:id', getFirstImageProductByPostId)
 route.get('/category/:id', getCateById);
 route.get('/post/user/:id', getAllPostByUserId);
 route.get('/user/:id', getUserByUserId);
+
+route.get('/listBidPrice/postId/:postId/postAuctionId/:postAuctionId', getUserBidPost);
+
 
 module.exports = route;

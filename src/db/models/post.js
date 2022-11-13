@@ -47,6 +47,13 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey: 'id'
         })
 
+      Post.hasOne(models.PostAuction,
+        {
+          sourceKey: 'id',
+          foreignKey: 'postId',
+        }
+      );
+
       Post.hasOne(models.Category, {
         sourceKey: 'cateId',
         foreignKey: 'id'

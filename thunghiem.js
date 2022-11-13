@@ -1,6 +1,7 @@
 // const { get } = require('http');
 const { validateEmail } = require('./src/controllers/helps.controller');
 const db = require('./src/db/models');
+const { getHighestBidder } = require('./src/services/common.service');
 // const listimageproduct = require('./src/db/models/listimageproduct');
 // const { getImagesProduct, getPostByCateId, getFirstImageForProduct } = require('./src/services/common.service');
 
@@ -159,21 +160,4 @@ const db = require('./src/db/models');
 // console.log(obj)
 
 
-const createCountry = async () => {
-  await db.PostCondition.bulkCreate(
-    [
-      {
-        status: 'Mới'
-      },
-      {
-        status: 'Sản phẩm cũ (đã sửa chữa)'
-      },
-      {
-        status: 'Sản phẩm cũ (chưa sửa chữa)'
-      },
-    ]
-  )
-}
-
-createCountry();
-
+getHighestBidder(279, 3).then(data => { console.log(data); })
