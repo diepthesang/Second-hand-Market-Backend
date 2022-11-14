@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -681,16 +681,31 @@ module.exports = {
 
     createBidSocket: async (req, res, next) => {
         try {
-            const { bid } = req.body;
-            _io.emit('userBid', bid);
+            const { isBid } = req.body;
+            _io.emit('userBid', isBid);
             return res.status(200).json(
                 {
                     status: 200,
-                    data: bid
+                    data: isBid
                 }
             )
         } catch (error) {
+            next(error)
+        }
+    },
 
+    getLikePostByUser: async (req, res, next) => {
+        try {
+            const { postId } = req.params;
+            const data = await getLikePostByUser(postId, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data
+                }
+            )
+        } catch (error) {
+            next(error);
         }
     }
 

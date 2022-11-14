@@ -549,7 +549,7 @@ module.exports = {
                         id,
                         userId,
                     },
-                    attributes: ['priceBid']
+                    // attributes: ['priceBid']
                 }
             )
         } catch (error) {
@@ -557,7 +557,22 @@ module.exports = {
         }
     },
 
-    
+    getLikePostByUser: async (postId, userId) => {
+        try {
+            return await db.Like.findOne(
+                {
+                    where: {
+                        postId,
+                        userId
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
 
 
 }
