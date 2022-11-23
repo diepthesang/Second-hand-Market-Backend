@@ -11,13 +11,24 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Order.hasOne(models.Post, {
+        sourceKey: 'postId',
+        foreignKey: 'id'
+      });
+
+      Order.hasOne(models.Transaction, {
+        sourceKey: 'transactionId',
+        foreignKey: 'id'
+      });
     }
   }
   Order.init({
+    status: DataTypes.STRING,
     transactionId: DataTypes.INTEGER,
     postId: DataTypes.INTEGER,
     price: DataTypes.INTEGER,
-    qty: DataTypes.INTEGER
+    qty: DataTypes.INTEGER,
+    msg: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Order',

@@ -16,6 +16,14 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'postId',
         foreignKey: 'id'
       });
+      Cart.hasOne(models.PostAuction, {
+        sourceKey: 'postId',
+        foreignKey: 'postId'
+      });
+      Cart.hasOne(models.User, {
+        sourceKey: 'userId',
+        foreignKey: 'userId'
+      });
     }
   }
   Cart.init({

@@ -1,4 +1,6 @@
-const { Op } = require("sequelize")
+const { pid } = require("process");
+const { Op } = require("sequelize");
+const { Sequelize, sequelize } = require("../db/models");
 const db = require("../db/models");
 
 module.exports = {
@@ -74,14 +76,23 @@ module.exports = {
         }
     },
 
-    getPostByCateId: async (id) => {
+    getPostByCateId: async (cateChildId, desct, province) => {
         try {
             return await db.Post.findAll(
                 {
                     where: {
-                        cateId: id,
-                        activeId: 1
+                        activeId: 1,
+                        cateId: cateChildId,
+                        province,
+                        price: {
+                            [Op.ne]: -1
+                        }
+                        // province: city,
+                        // price: bid
                     },
+                    order: [
+                        [desct, 'DESC'],
+                    ],
                     // raw: true,
                     // nest: true,
                     // include: {
@@ -90,9 +101,48 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
+
+
+    getSomePost: async (cateParentId) => {
+        try {
+
+            const listCateChildId = await db.Category.findAll(
+                {
+                    where: {
+                        cateParent: cateParentId,
+                    },
+                    attributes: ['id']
+                }
+            )
+
+            const _listCateChildId = listCateChildId.map(item => {
+                return (
+                    {
+                        cateId: item.id
+                    }
+                )
+            })
+            console.log('listCateId:::', _listCateChildId);
+
+
+            return await db.Post.findAll(
+                {
+                    where: {
+                        activeId: 1,
+                        [Op.or]: _listCateChildId
+                    },
+                    order: sequelize.random()
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+
 
     getFirstImageForProduct: async (postId) => {
         try {
@@ -119,7 +169,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -180,7 +230,7 @@ module.exports = {
             return data
 
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -208,7 +258,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -220,6 +270,8 @@ module.exports = {
                         userId,
                         activeId: 1
                     },
+                    order: [['id', 'DESC']]
+
 
                     // raw: true,
                     // nest: true,
@@ -229,7 +281,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -243,7 +295,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -257,11 +309,12 @@ module.exports = {
                     where: {
                         province,
                         activeId: 1,
-                    }
+                    },
+                    order: [['id', 'DESC']]
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -276,7 +329,7 @@ module.exports = {
                 }
             )
         } catch (error) {
-            return error
+            throw error
         }
     },
 
@@ -303,7 +356,7 @@ module.exports = {
             );
             return data;
         } catch (error) {
-            return error;
+            throw error;
         }
     },
 
@@ -332,6 +385,19 @@ module.exports = {
             throw error;
         }
     },
+
+    getAllCityPost: async () => {
+        try {
+            return await db.Post.aggregate('province', 'DISTINCT', { plain: false });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
+
+
+
 
 
 

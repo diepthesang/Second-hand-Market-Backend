@@ -3,7 +3,7 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
 const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
@@ -67,6 +67,16 @@ route.get('/priceBid/:id', passport.authenticate('jwt', { session: false }), get
 route.post('/createBid', createBidSocket);
 
 route.get('/getLikePost/:postId', passport.authenticate('jwt', { session: false }), getLikePostByUser)
+
+route.put('/updatePriceEnd', passport.authenticate('jwt', { session: false }), updatePriceEnd);
+
+route.get('/orderBuyPost/:status', passport.authenticate('jwt', { session: false }), getOrderBuyPost);
+
+route.put('/updateConfirmOrderPost', passport.authenticate('jwt', { session: false }), updateConfirmOrderPost);
+
+route.delete('/Post/:id', passport.authenticate('jwt', { session: false }), removePost)
+
+route.get('/Post/like', passport.authenticate('jwt', { session: false }), getPostsLike)
 
 
 

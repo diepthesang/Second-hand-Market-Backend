@@ -6,9 +6,9 @@ module.exports = {
       _io.emit('userBid', bid)
     });
 
-    socket.on('coundoe', timer => {
-      console.log('countdown time:::', timer);
-      _io.emit('countdownTime', timer);
+    socket.on('test', test => {
+      console.log('test socket:::', test);
+      _io.emit('test', test);
     })
 
   }

@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -8,13 +8,17 @@ const { getUserByEmail } = require('../services/auth.service');
 const db = require('../db/models');
 const paypalRestSdk = require('paypal-rest-sdk');
 const { _infoTransformers } = require('passport/lib');
+// const { setTimeout } = require('timers/promises');
 
 module.exports = {
     createPost: async (req, res, next) => {
-        console.log('req.body:::', req.body);
+        // console.log('req.body:::', req.body);
 
         try {
             const { cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, images, bidOption, startPrice, bidEndTime } = req.body;
+
+            console.log('bidEndTime::::', new Date(bidEndTime).getTime())
+
 
 
             if (!cateId || !name || !statusId || !warrantyId || !madeInId || !description || !price || !province || !district || !ward || !address) {
@@ -47,6 +51,12 @@ module.exports = {
             // create auction
 
             if (bidOption === 'true') {
+                const _time = new Date(bidEndTime).getTime() - Date.now();
+                console.log('_time:::', _time);
+                setTimeout(() => {
+                    console.log('day la ham set time out')
+                    _io.emit('test', 'this is test');
+                }, _time);
                 await createAuction(post.dataValues.id, bidEndTime, startPrice);
             }
 
@@ -406,7 +416,6 @@ module.exports = {
     checkPostCartToCheckout: async (req, res, next) => {
         try {
             const { postId, checked } = req.body
-            console.log('postId:::', postId)
             const data = await checkPostCartToCheckout(checked, postId, req.user.userId);
             return res.status(200).json(
                 {
@@ -423,7 +432,7 @@ module.exports = {
         try {
             const { checked } = req.params;
             console.log('checked:::', checked)
-            const data = await getPostChecked(checked);
+            const data = await getPostChecked(checked, req.user.userId);
             for (let item in data) {
                 data[item].image = await getFirstImageForProduct(data[item].postId);
             }
@@ -455,14 +464,30 @@ module.exports = {
 
     // THANH TOAN PAYPAL
     createPayment: async (req, res, next) => {
-
         const _userId = req.user.userId;
         const { status, message } = req.body;
+        console.log({ _userId, status, message });
 
-
-        let listPost = await getPostChecked();
+        let listPost = await getPostChecked(1, _userId);
         console.log('*getPostChecked:::', listPost);
+        const listRevenue = listPost.map(item => {
+            if (item.Post.price == -1) {
+                item.Post.price = item.PostAuction.priceEnd
+            }
+            return (
+                {
+                    userId: item.Post.userId,
+                    revenue: item.Post.price
+                }
+            )
+        });
+
+        await createRevenue(listRevenue);
+
         const _listPostItems = listPost.map(item => {
+            if (item.Post.price == -1) {
+                item.Post.price = item.PostAuction.priceEnd
+            }
             return (
                 {
                     "name": item.Post.title,
@@ -526,7 +551,7 @@ module.exports = {
                 const _payment = payment.payer.payment_method;
                 const _payerId = payment.id;
                 try {
-                    const data = await createPayment(0, _userId, _total, _payment, _payerId, message);
+                    const data = await createPayment(0, _userId, _total, _payment, _payerId, null);
                     console.log('data_createpayment:::', data);
                     let _transactionId = data.dataValues.id
                     console.log('**transactionId:::', data.dataValues.id);
@@ -538,6 +563,7 @@ module.exports = {
                                 postId: item.Post.id,
                                 price: item.Post.price,
                                 qty: null,
+                                msg: null
                             }
                         )
                     });
@@ -707,7 +733,81 @@ module.exports = {
         } catch (error) {
             next(error);
         }
+    },
+
+    updatePriceEnd: async (req, res, next) => {
+        try {
+            const { priceEnd, postId } = req.body;
+            const data = await updatePriceEnd(priceEnd, postId);
+            return res.status(200).json({
+                status: 200,
+                data,
+            })
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getOrderBuyPost: async (req, res, next) => {
+        try {
+            const { status } = req.params;
+            const data = await getOrderBuyPost(status, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    updateConfirmOrderPost: async (req, res, next) => {
+        try {
+            const { id, status } = req.body;
+            const data = await updateConfirmOrderPost(id, status);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+
+    removePost: async (req, res, next) => {
+        try {
+            const { id } = req.params;
+            const data = await removePost(id, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getPostsLike: async (req, res, next) => {
+        try {
+            const data = await getPostsLike(req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
     }
+
 
 
 

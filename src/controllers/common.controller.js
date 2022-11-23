@@ -1,5 +1,5 @@
 const db = require("../db/models")
-const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost } = require("../services/common.service")
+const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost, getAllCityPost, getSomePost } = require("../services/common.service")
 
 module.exports = {
 
@@ -94,8 +94,9 @@ module.exports = {
 
     getPostByCateId: async (req, res, next) => {
         try {
-            const id = req.params.id
-            const data = await getPostByCateId(id)
+            const { id, desct, province } = req.params;
+            console.log({ id, desct, province })
+            const data = await getPostByCateId(id, desct, province)
 
             for (let item in data) {
                 data[item].image = await getFirstImageForProduct(data[item].id);
@@ -296,6 +297,51 @@ module.exports = {
             )
         } catch (error) {
             next(error);
+        }
+    },
+
+    timeOutTest: (req, res, next) => {
+        setTimeout(() => {
+            console.log('day la ham set time out')
+            _io.emit('test', 'this is test');
+        }, 1000 * 20);
+
+        return res.json(
+            {
+                message: 'test time out'
+            }
+        )
+    },
+
+    getAllCityPost: async (req, res, next) => {
+        try {
+            const data = await getAllCityPost();
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getSomePost: async (req, res, next) => {
+        const { cateParentId } = req.params;
+        try {
+            const data = await getSomePost(cateParentId);
+            for (let item in data) {
+                data[item].image = await getFirstImageForProduct(data[item].id);
+            };
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            throw error;
         }
     }
 

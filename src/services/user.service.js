@@ -2,7 +2,7 @@ const db = require("../db/models")
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { create } = require("domain");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const { devNull } = require("os");
 
 module.exports = {
@@ -317,9 +317,15 @@ module.exports = {
                     },
                     raw: true,
                     nest: true,
-                    include: {
-                        model: db.Post
-                    }
+                    include: [
+                        {
+                            model: db.Post,
+                        },
+                        {
+                            model: db.PostAuction
+                        }
+                    ],
+
                 }
             )
             return data;
@@ -370,7 +376,9 @@ module.exports = {
                     where: {
                         postId,
                         userId,
-                    }
+                    },
+
+
                 }
             )
         } catch (error) {
@@ -378,19 +386,37 @@ module.exports = {
         }
     },
 
-    getPostChecked: async (checked) => {
-
+    getPostChecked: async (checked, userId) => {
         try {
             return await db.Cart.findAll(
                 {
                     where: {
-                        checked: true
+                        checked: true,
+                        userId,
                     },
                     raw: true,
                     nest: true,
-                    include: {
-                        model: db.Post
-                    }
+                    include: [
+                        {
+                            model: db.Post,
+                            raw: true,
+                            nest: true,
+                            include: [
+                                {
+                                    model: db.User,
+                                    attributes: ['userId', 'firstName', 'lastName']
+                                }
+                            ]
+                        },
+                        {
+                            model: db.PostAuction
+                        },
+                        // {
+                        //     model: db.User,
+                        //     attributes: ['userId', 'firstName', 'lastName']
+                        // },
+                    ]
+
                 }
             )
         } catch (error) {
@@ -570,8 +596,167 @@ module.exports = {
         } catch (error) {
             throw error;
         }
-    }
+    },
 
+    updatePriceEnd: async (priceEnd, postId) => {
+        try {
+            return await db.PostAuction.update(
+                {
+                    priceEnd
+                },
+                {
+                    where: {
+                        postId
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    createRevenue: async (revenue) => {
+        console.log('**revenue:::::::', revenue);
+        try {
+            return await db.Revenue.bulkCreate(
+                [...revenue]
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // xu li don hang mua
+    confirmBuyOrder: async () => {
+        try {
+
+        } catch (error) {
+
+        }
+    },
+    // lay cac post cho duoc xac nhan
+    getOrderBuyPost: async (status, userId) => {
+        try {
+            return await db.Order.findAll(
+                {
+                    where: {
+                        status,
+                    },
+                    attributes: ['id', 'status'],
+                    raw: false,
+                    nest: true,
+                    include:
+                        [
+                            {
+                                model: db.Post,
+                                attributes: ['title', 'price'],
+                                where: {
+                                    userId,
+                                },
+                                include: [
+                                    {
+                                        model: db.PostImage,
+                                        attributes: ['imagePath']
+                                    }
+                                ]
+                            },
+                            {
+                                model: db.Transaction,
+                                attributes: ['createdAt'],
+                                include: [
+                                    {
+                                        model: db.User,
+                                        attributes: ['firstName', 'lastName', 'address', 'phone']
+                                    }
+                                ]
+                            }
+                        ]
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateConfirmOrderPost: async (id, status) => {
+        try {
+            return await db.Order.update(
+                {
+                    status
+                },
+                {
+                    where: {
+                        id
+                    }
+                }
+            );
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    removePost: async (id, userId) => {
+        try {
+            await db.Post.destroy(
+                {
+                    where: {
+                        id,
+                        userId
+                    },
+                    include: [
+                        {
+                            model: db.PostImage
+                        }
+                    ]
+                }
+            );
+
+            return await db.PostImage.destroy(
+                {
+                    where: {
+                        postId: id,
+                        userId,
+                    }
+                }
+            )
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPostsLike: async (userId) => {
+        try {
+            return await db.Like.findAll(
+                {
+
+                    where: {
+                        userId
+                    },
+                    attributes: [],
+                    raw: false,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.Post,
+                            attributes: ['id', 'title', 'price'],
+                            include: [
+                                {
+                                    model: db.PostImage,
+                                    attributes: ['imagePath']
+                                }
+                            ]
+
+                        }
+                    ]
+
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
 
 
 

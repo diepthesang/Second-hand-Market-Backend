@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
           foreignKey: 'postId',
         });
 
+      // Post.hasOne(models.PostImage,
+      //   {
+      //     sourceKey: 'id',
+      //     foreignKey: 'postId',
+      //   });
+
       Post.hasOne(models.User,
         {
           sourceKey: 'userId',
