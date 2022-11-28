@@ -1,5 +1,5 @@
 const db = require("../db/models")
-const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost, getAllCityPost, getSomePost } = require("../services/common.service")
+const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost, getAllCityPost, getSomePost, getPostsByCateChildId } = require("../services/common.service")
 
 module.exports = {
 
@@ -130,7 +130,9 @@ module.exports = {
 
     getPostByPostId: async (req, res, next) => {
         try {
+
             const postId = req.params.id;
+            console.log('postId:::', postId);
             const data = await getPostByPostId(postId);
             console.log('PostByPostId:::;', data);
             return res.status(200).json(
@@ -177,6 +179,8 @@ module.exports = {
 
     getCateById: async (req, res, next) => {
         try {
+            console.log('pathhhhh:::::::::', __dirBaseRoot)
+
             const cateChildId = req.params.id;
             const data = await getCateById(cateChildId);
             return res.status(200).json(
@@ -193,6 +197,7 @@ module.exports = {
     getAllPostByUserId: async (req, res, next) => {
         try {
             const userId = req.params.id
+            
             const data = await getAllPostByUserId(userId);
             for (let item in data) {
                 data[item].image = await getFirstImageForProduct(data[item].id);
@@ -341,7 +346,35 @@ module.exports = {
                 }
             )
         } catch (error) {
-            throw error;
+            next(error);
+        }
+    },
+
+    getPostsByCateChildId: async (req, res, next) => {
+        try {
+            const { cateId } = req.params;
+            const data = await getPostsByCateChildId(cateId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    uploadImages: async (req, res, next) => {
+        try {
+            const images = req.files;
+            console.log('images::::::', images);
+            return res.json({
+                status: 200,
+                images,
+            })
+        } catch (error) {
+            next(error);
         }
     }
 

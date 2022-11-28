@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -12,20 +12,23 @@ const { _infoTransformers } = require('passport/lib');
 
 module.exports = {
     createPost: async (req, res, next) => {
-        // console.log('req.body:::', req.body);
-
         try {
-            const { cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, images, bidOption, startPrice, bidEndTime } = req.body;
+            let { cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree } = req.body;
 
-            console.log('bidEndTime::::', new Date(bidEndTime).getTime())
-
-
+            console.log({ cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree });
 
             if (!cateId || !name || !statusId || !warrantyId || !madeInId || !description || !price || !province || !district || !ward || !address) {
                 throw {
                     status: 404,
                     codeMessage: 'ERR_FIELD',
                     message: httpMessage.ERR_FIELD,
+                }
+            }
+
+            if (Number.isNaN(price)) {
+                throw {
+                    status: 404,
+                    message: 'Tiền phải là số',
                 }
             }
 
@@ -37,9 +40,29 @@ module.exports = {
                 }
             }
 
+            if (isBid === 'true') {
+                price = -1;
+                if (!Number.isNaN(Number(bidEndTime))) {
+                    throw {
+                        status: 404,
+                        message: 'Thời gian đấu giá phải ít nhất là 10 phút'
+                    }
+                }
+            } else if (isFree === 'true') {
+                price = 0;
+            } else {
+                if (Number(price) < 1000) {
+                    throw {
+                        status: 404,
+                        message: 'Số tiền phải lớn hơn 1000 đồng'
+                    }
+                }
+            }
 
-            const post = await createPost(cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, req.user.userId);
 
+            const post = await createPost(cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, req.user.userId);
+
+            console.log('post:::::::', post)
 
             if (post.dataValues.id) {
                 for (let item in req.files) {
@@ -48,16 +71,46 @@ module.exports = {
                 }
             };
 
-            // create auction
-
-            if (bidOption === 'true') {
+            // create bid
+            if (isBid === 'true') {
+                console.log('vo day');
+                if (new Date(bidEndTime).getTime() - Date.now() <= 1000 * 60 * 10) {
+                    return res.status(400).json(
+                        {
+                            status: 400,
+                            message: 'Thời gian đấu giá phải ít nhất là 10 phút'
+                        }
+                    )
+                }
+                const data = await createAuction(post.dataValues.id, bidEndTime, startPrice);
+                const _postAutionId = data.dataValues.id;
+                const _postId = data.dataValues.postId;
                 const _time = new Date(bidEndTime).getTime() - Date.now();
-                console.log('_time:::', _time);
-                setTimeout(() => {
-                    console.log('day la ham set time out')
-                    _io.emit('test', 'this is test');
+                setTimeout(async () => {
+                    const _highestBidder = await getHighestBidder(_postId, _postAutionId);
+                    if (_highestBidder === null) {
+                        return;
+                    }
+                    // console.log('highestBidder:::', _highestBidder);
+                    const otherBidders = await getOtherBidders(_highestBidder.userId, _postId, _postAutionId);
+                    const _otherBidders = otherBidders.map(item => {
+                        return (
+                            {
+                                userId: item.userId
+                            }
+                        )
+                    });
+
+                    await updatePriceEnd(_highestBidder.priceBid, _postId);
+                    await addPostToCart(_highestBidder.userId, _postId)
+
+                    if (!_highestBidder) {
+                        return;
+                    } else {
+                        _io.emit('test', { highestBidder: _highestBidder.userId, otherBidders: _otherBidders });
+                    }
+
                 }, _time);
-                await createAuction(post.dataValues.id, bidEndTime, startPrice);
             }
 
             return res.status(200).json({
@@ -433,6 +486,7 @@ module.exports = {
             const { checked } = req.params;
             console.log('checked:::', checked)
             const data = await getPostChecked(checked, req.user.userId);
+            console.log('data::::', data);
             for (let item in data) {
                 data[item].image = await getFirstImageForProduct(data[item].postId);
             }

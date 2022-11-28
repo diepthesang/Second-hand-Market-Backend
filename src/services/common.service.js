@@ -270,7 +270,7 @@ module.exports = {
                         userId,
                         activeId: 1
                     },
-                    order: [['id', 'DESC']]
+                    order: [['id', 'DESC']],
 
 
                     // raw: true,
@@ -392,9 +392,29 @@ module.exports = {
         } catch (error) {
             throw error;
         }
-    }
+    },
 
+    getPostsByCateChildId: async (cateId) => {
+        try {
+            return db.Post.findAll({
+                where: {
+                    cateId
+                },
+                raw: false,
+                nest: true,
+                include: [
+                    {
+                        model: db.PostImage,
 
+                    },
+                ],
+            })
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    
 
 
 

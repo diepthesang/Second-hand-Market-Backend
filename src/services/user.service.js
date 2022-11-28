@@ -3,7 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { create } = require("domain");
 const { Op, where } = require("sequelize");
-const { devNull } = require("os");
+// const { devNull } = require("os");
+const fs = require('fs');
+
 
 module.exports = {
     createCategory: async (cateName, cateLogoImg, cateParent) => {
@@ -39,10 +41,8 @@ module.exports = {
         }
     },
 
-    createPost: async (cateId, name, statusId, warrantyId, madeInId, description, free, price, province, district, ward, address, userId) => {
+    createPost: async (cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, userId) => {
         try {
-            // free === null ? free = 0 : free;
-            // console.log('freee:::', free);
             return await db.Post.create(
                 {
                     cateId,
@@ -51,7 +51,6 @@ module.exports = {
                     warrantyId,
                     originId: madeInId,
                     description,
-                    free,
                     price,
                     province,
                     district,
@@ -76,7 +75,7 @@ module.exports = {
                 }
             );
         } catch (error) {
-            throw (error);
+            throw error;
         }
     },
 
@@ -230,9 +229,9 @@ module.exports = {
     },
 
     updateProfileByUser: async (userId, firstName, lastName, email, phone, address, changePassword, imagePath) => {
-        console.log('service:::::', {
-            userId, firstName, lastName, email, address, changePassword, imagePath
-        });
+        // console.log('service:::::', {
+        //     userId, firstName, lastName, email, address, changePassword, imagePath
+        // });
 
 
 
@@ -499,7 +498,7 @@ module.exports = {
                 }
             );
 
-            console.log('isUser::::', isUser)
+            // console.log('isUser::::', isUser)
 
             if (isUser) {
 
@@ -616,7 +615,7 @@ module.exports = {
     },
 
     createRevenue: async (revenue) => {
-        console.log('**revenue:::::::', revenue);
+        // console.log('**revenue:::::::', revenue);
         try {
             return await db.Revenue.bulkCreate(
                 [...revenue]
@@ -712,7 +711,30 @@ module.exports = {
                 }
             );
 
-            return await db.PostImage.destroy(
+            const listImagePaths = await db.PostImage.findAll(
+                {
+                    where: {
+                        postId: id,
+                    },
+                    attributes: ['imagePath']
+                }
+            )
+
+            const listFiles = [];
+
+            listImagePaths.map(item => {
+                return listFiles.push(item.imagePath);
+            })
+
+
+            listFiles.forEach(item => {
+                fs.unlink(`${__dirBaseRoot}/src/public/${item}`, (err) => {
+                    console.log(err);
+                })
+            })
+
+
+            await db.PostImage.destroy(
                 {
                     where: {
                         postId: id,
@@ -720,6 +742,8 @@ module.exports = {
                     }
                 }
             )
+
+            return listImagePaths;
 
         } catch (error) {
             throw error;
@@ -757,6 +781,24 @@ module.exports = {
             throw error;
         }
     },
+
+    getOtherBidders: async (highestBidder, postId, postAuctionId) => {
+        try {
+            return await db.BidOrder.findAll(
+                {
+                    where: {
+                        postId,
+                        postAuctionId,
+                        userId: {
+                            [Op.not]: highestBidder,
+                        }
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    }
 
 
 
