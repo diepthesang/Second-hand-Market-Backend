@@ -17,6 +17,7 @@ var cors = require('cors');
 const authRoute = require('./src/routes/auth.route');
 const userRoute = require('./src/routes/user.route')
 const commonRoute = require('./src/routes/common.route')
+const adminRoute = require('./src/routes/admin.route')
 const { handleErrRoute, handleErr } = require('./src/middlewares/handleErr.middleware');
 const db = require('./src/db/models');
 app.use(cors())
@@ -57,6 +58,9 @@ app.use('/auth', authRoute)
 
 // user route
 app.use('/user', userRoute)
+// admin route
+app.use('/admin', adminRoute)
+
 
 app.use('/common', commonRoute);
 

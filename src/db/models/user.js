@@ -11,10 +11,13 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      // User.belongsTo(models.Post,
-      //   {
-      //     foreignKey: 'userId'
-      //   })
+      User.hasOne(models.UserStatus,
+        {
+          sourceKey: 'statusId',
+          foreignKey: 'id',
+        }
+      );
+
     }
   }
   User.init({
@@ -30,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     starRating: DataTypes.INTEGER,
     revenue: DataTypes.INTEGER,
     role: DataTypes.ENUM('ROLE_USER', 'ROLE_ADMIN'),
-    banUser: DataTypes.BOOLEAN
+    statusId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'User',

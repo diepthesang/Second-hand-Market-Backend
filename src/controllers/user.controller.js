@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -25,7 +25,7 @@ module.exports = {
                 }
             }
 
-            if (Number.isNaN(price)) {
+            if (Number.isNaN(Number(price))) {
                 throw {
                     status: 404,
                     message: 'Tiền phải là số',
@@ -208,6 +208,56 @@ module.exports = {
             const { activeId, page } = req.params
             // const 
             const _data = await getPostShowByUserId(req.user.userId, activeId, page);
+            const data = _data.rows;
+            console.log('_totalPage:::', _data.count);
+            const totalPage = Math.ceil(_data.count / 5);
+            console.log('total page:::', totalPage)
+            for (let item in data) {
+                data[item].image = await getFirstImageForProduct(data[item].id);
+            }
+
+            return res.status(200).json(
+                {
+                    status: 200,
+                    totalPage,
+                    data
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getPostHideByUserId: async (req, res, next) => {
+        try {
+            const { activeId, page } = req.params
+            // const 
+            const _data = await getPostHideByUserId(req.user.userId, activeId, page);
+            const data = _data.rows;
+            console.log('_totalPage:::', _data.count);
+            const totalPage = Math.ceil(_data.count / 5);
+            console.log('total page:::', totalPage)
+            for (let item in data) {
+                data[item].image = await getFirstImageForProduct(data[item].id);
+            }
+
+            return res.status(200).json(
+                {
+                    status: 200,
+                    totalPage,
+                    data
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getPostBidShowByUserId: async (req, res, next) => {
+        try {
+            const { page } = req.params
+            // const 
+            const _data = await getPostBidShowByUserId(req.user.userId, 1, page);
             const data = _data.rows;
             console.log('_totalPage:::', _data.count);
             const totalPage = Math.ceil(_data.count / 5);
@@ -860,7 +910,9 @@ module.exports = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+
+
 
 
 

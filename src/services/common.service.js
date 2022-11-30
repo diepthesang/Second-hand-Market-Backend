@@ -398,7 +398,8 @@ module.exports = {
         try {
             return db.Post.findAll({
                 where: {
-                    cateId
+                    cateId,
+                    activeId: 1
                 },
                 raw: false,
                 nest: true,
@@ -414,7 +415,7 @@ module.exports = {
         }
     },
 
-    
+
 
 
 

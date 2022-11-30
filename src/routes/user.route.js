@@ -3,7 +3,7 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getPostBidShowByUserId, getPostHideByUserId, } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
 const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
@@ -18,6 +18,8 @@ route.get('/userInfo', passport.authenticate('jwt', { session: false }), getUser
 route.put('/updateLikePost', passport.authenticate('jwt', { session: false }), updateLikePost)
 
 route.get('/post/activeId/:activeId/page/:page', passport.authenticate('jwt', { session: false }), getPostShowByUserId)
+
+route.get('/postHide/activeId/:activeId/page/:page', passport.authenticate('jwt', { session: false }), getPostHideByUserId)
 
 route.put('/updateActiveIdPost', passport.authenticate('jwt', { session: false }), updateActiveIdPost)
 
@@ -77,6 +79,9 @@ route.put('/updateConfirmOrderPost', passport.authenticate('jwt', { session: fal
 route.delete('/Post/:id', passport.authenticate('jwt', { session: false }), removePost)
 
 route.get('/Post/like', passport.authenticate('jwt', { session: false }), getPostsLike)
+
+route.get('/post/bid/page/:page', passport.authenticate('jwt', { session: false }), getPostBidShowByUserId)
+
 
 
 

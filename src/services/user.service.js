@@ -122,6 +122,49 @@ module.exports = {
                     where: {
                         userId,
                         activeId,
+                        price: {
+                            [Op.not]: -1,
+                        }
+                    }
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+    getPostHideByUserId: async (userId, activeId, page) => {
+        try {
+            const _page = page * 5 - 5;
+            return await db.Post.findAndCountAll(
+                {
+                    limit: 5,
+                    offset: _page,
+                    where: {
+                        userId,
+                        activeId,
+                        // price: {
+                        //     [Op.not]: -1,
+                        // }
+                    }
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+    getPostBidShowByUserId: async (userId, activeId, page) => {
+        try {
+            const _page = page * 5 - 5;
+            return await db.Post.findAndCountAll(
+                {
+                    limit: 5,
+                    offset: _page,
+                    where: {
+                        userId,
+                        activeId,
+                        price: -1
                     }
                 }
             )
