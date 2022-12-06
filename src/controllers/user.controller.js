@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId, updateTypeForPost, withdrawByUser, getRevenueByUser, getQtyPostByMonth, searchUserByLastname } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -14,6 +14,8 @@ module.exports = {
     createPost: async (req, res, next) => {
         try {
             let { cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree } = req.body;
+
+            let typePost = '';
 
             console.log({ cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree });
 
@@ -42,6 +44,7 @@ module.exports = {
 
             if (isBid === 'true') {
                 price = -1;
+                typePost = 'BIDDING'
                 if (!Number.isNaN(Number(bidEndTime))) {
                     throw {
                         status: 404,
@@ -60,7 +63,7 @@ module.exports = {
             }
 
 
-            const post = await createPost(cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, req.user.userId);
+            const post = await createPost(cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, req.user.userId, typePost);
 
             console.log('post:::::::', post)
 
@@ -88,6 +91,7 @@ module.exports = {
                 const _time = new Date(bidEndTime).getTime() - Date.now();
                 setTimeout(async () => {
                     const _highestBidder = await getHighestBidder(_postId, _postAutionId);
+                    await updateTypeForPost(_postId, 'BID')
                     if (_highestBidder === null) {
                         return;
                     }
@@ -608,7 +612,7 @@ module.exports = {
             listPrice.push(item.Post.price)
         });
         // tong tien
-        const _total = listPrice.reduce((a, b) => a + b, 0);
+        let _total = listPrice.reduce((a, b) => a + b, 0);
 
         // let _listPostOrder = listPost.map(item => {
         //     return (
@@ -911,6 +915,63 @@ module.exports = {
             next(error);
         }
     },
+
+    withdrawByUser: async (req, res, next) => {
+        try {
+            const { isWithdrew } = req.body;
+            const data = await withdrawByUser(isWithdrew, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getRevenueByUser: async (req, res, next) => {
+        try {
+            const { isWithdrew } = req.params;
+            console.log('isWithDrew:::', isWithdrew)
+            const data = await getRevenueByUser(isWithdrew, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getQtyPostByMonths: async (req, res, next) => {
+        try {
+            const listMonths = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+            const listPostsByMonths = await Promise.all(listMonths.map(async (item) => {
+                const qtyPost = await getQtyPostByMonth(item, req.user.userId);
+                return (
+                    {
+                        name: `Thang ${item}`,
+                        "Bài đăng": qtyPost
+                    }
+                )
+            }))
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data: listPostsByMonths,
+                }
+            )
+
+        } catch (error) {
+            next(error);
+        }
+    },
+
+
 
 
 

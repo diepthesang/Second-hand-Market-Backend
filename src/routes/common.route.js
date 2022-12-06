@@ -1,6 +1,7 @@
+const { randomBytes } = require('crypto');
 const express = require('express');
 const commonController = require('../controllers/common.controller');
-const { getAllNameCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByPostId, getImagesProduct, getFirstImageProduct, getFirstImageProductByPostId, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUserId, getPostByPlace, getPostByCityName, getPostByName, getUserBidPost, timeOutTest, getAllCityPost, getSomePost, getPostsByCateChildId, uploadImages } = require('../controllers/common.controller');
+const { getAllNameCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByPostId, getImagesProduct, getFirstImageProduct, getFirstImageProductByPostId, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUserId, getPostByPlace, getPostByCityName, getPostByName, getUserBidPost, timeOutTest, getAllCityPost, getSomePost, getPostsByCateChildId, uploadImages, getPostsByType } = require('../controllers/common.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 
 const { getCategoryParent } = require('../services/common.service');
@@ -32,8 +33,8 @@ route.get('/timeout', timeOutTest);
 route.get('/allCityPost', getAllCityPost);
 route.get('/somePost/:cateParentId', getSomePost);
 route.get('/posts/cateId/:cateId', getPostsByCateChildId);
-
-route.post('/upload', uploadMultiImage, uploadImages)
+route.post('/upload', uploadMultiImage, uploadImages);
+route.get('/posts/type/:type/activeId/:activeId', getPostsByType);
 
 
 module.exports = route;

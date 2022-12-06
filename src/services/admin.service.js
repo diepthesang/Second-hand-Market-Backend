@@ -1,4 +1,6 @@
+const { Op } = require("sequelize");
 const db = require("../db/models")
+const fs = require('fs');
 
 module.exports = {
   getUserInfo: async () => {
@@ -34,5 +36,236 @@ module.exports = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+
+  searchUserByLastname: async (lastName) => {
+    try {
+      return await db.User.findAll(
+        {
+          where: {
+            lastName: {
+              [Op.substring]: lastName
+            },
+          },
+          attributes: ['userId', 'firstName', 'lastName', 'phone', 'address', 'starRating', 'createdAt'],
+
+          raw: true,
+          nest: true,
+          include: [
+            {
+              model: db.UserStatus,
+              attributes: ['status'],
+            },
+
+          ]
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
+  getAllPost: async () => {
+    try {
+      return await db.Post.findAll(
+        {
+          raw: false,
+          nest: true,
+          include: [
+            {
+              model: db.User,
+              attributes: ['userId']
+            },
+            {
+              model: db.Warranty,
+              attributes: ['status']
+            },
+            {
+              model: db.PostCondition,
+              attributes: ['status']
+            },
+            {
+              model: db.Origin,
+              attributes: ['countryName']
+            },
+            {
+              model: db.PostActive,
+              attributes: ['status']
+            },
+            {
+              model: db.Category,
+              attributes: ['cateName']
+            },
+            {
+              model: db.PostImage,
+              attributes: ['imagePath']
+            },
+
+
+
+
+          ],
+          order: [['id', 'DESC']],
+
+        }
+      )
+    } catch (error) {
+      return error
+    }
+  },
+
+  removePostByPostId: async (id) => {
+    console.log('postId:::', id);
+    try {
+      const isSuccess = await db.Post.destroy(
+        {
+          where: {
+            id
+          }
+        }
+      );
+      const listImagePaths = await db.PostImage.findAll(
+        {
+          where: {
+            postId: id,
+          },
+          attributes: ['imagePath']
+        }
+      )
+
+      const listFiles = [];
+
+      listImagePaths.map(item => {
+        return listFiles.push(item.imagePath);
+      });
+
+
+      listFiles.forEach(item => {
+        fs.unlink(`${__dirBaseRoot}/src/public/${item}`, (err) => {
+          console.log(err);
+        })
+      })
+
+
+      await db.PostImage.destroy(
+        {
+          where: {
+            postId: id,
+          }
+        }
+      );
+
+      // xoa hang trong bang PostAutions
+      await db.PostAuction.destroy(
+        {
+          where: {
+            postId: id,
+          }
+        }
+      )
+
+      // xoa hang trong bang Cart
+      await db.Cart.destroy(
+        {
+          where: {
+            postId: id
+          }
+        }
+      )
+
+      // xoa hang trong bang Likes
+      await db.Like.destroy(
+        {
+          where: {
+            postId: id
+          }
+        }
+      );
+
+      return isSuccess;
+
+
+    } catch (error) {
+      throw error
+    }
+  },
+
+
+  removePostsByUserId: async (userId) => {
+    try {
+      const posts = await db.Post.findAll(
+        {
+          where: {
+            userId
+          },
+          attributes: ['id']
+        }
+      );
+      await module.exports.removeUser(userId)
+
+      for (const item of posts) {
+        console.log('item::;', item.id);
+        await module.exports.removePostByPostId(item.id);
+      }
+      return !!posts;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
+  searchPostByTitle: async (title) => {
+    try {
+      return await db.Post.findAll(
+        {
+          where: {
+            title: {
+              [Op.substring]: title
+            },
+          },
+
+          raw: false,
+          nest: true,
+          include: [
+            {
+              model: db.User,
+              attributes: ['userId']
+            },
+            {
+              model: db.Warranty,
+              attributes: ['status']
+            },
+            {
+              model: db.PostCondition,
+              attributes: ['status']
+            },
+            {
+              model: db.Origin,
+              attributes: ['countryName']
+            },
+            {
+              model: db.PostActive,
+              attributes: ['status']
+            },
+            {
+              model: db.Category,
+              attributes: ['cateName']
+            },
+            {
+              model: db.PostImage,
+              attributes: ['imagePath']
+            },
+          ],
+          order: [['id', 'DESC']],
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+
+
+
 }

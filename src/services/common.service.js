@@ -415,6 +415,30 @@ module.exports = {
         }
     },
 
+    getPostsByType: async (typePost, activeId) => {
+        try {
+            return await db.Post.findAll(
+                {
+                    where: {
+                        activeId: 1,
+                        typePost,
+                    },
+                    raw: false,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.PostImage,
+                            attributes: ['imagePath']
+                        }
+                    ]
+
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    }
+
 
 
 

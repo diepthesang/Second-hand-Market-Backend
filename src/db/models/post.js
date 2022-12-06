@@ -65,6 +65,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'id'
       });
 
+      Post.hasOne(models.Cart, {
+        sourceKey: 'id',
+        foreignKey: 'postId'
+      });
+
       Post.hasMany(models.Like, {
         sourceKey: 'id',
         foreignKey: 'postId',
@@ -90,6 +95,7 @@ module.exports = (sequelize, DataTypes) => {
     ward: DataTypes.STRING,
     street: DataTypes.STRING,
     activeId: DataTypes.ENUM('1', '2', '3', '4', '5'),
+    typePost: DataTypes.ENUM('SELL', 'BID', 'BIDDING'),
     userId: DataTypes.STRING,
     likeCount: DataTypes.BIGINT,
   }, {

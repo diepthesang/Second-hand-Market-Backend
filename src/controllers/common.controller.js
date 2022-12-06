@@ -1,5 +1,5 @@
 const db = require("../db/models")
-const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost, getAllCityPost, getSomePost, getPostsByCateChildId } = require("../services/common.service")
+const { getAllCountry, getAllWarrantyStatus, getAllCategoryParent, getAllCategoryChild, getAllStatusCurrentProduct, getAllPost, getPostByCateId, getPostByCityName, getPostByPostId, getImagesProduct, getFirstImageForProduct, getCateParentByCateChild, getCateById, getAllPostByUserId, getUserByUSerId, getPostByPlace, getPostByName, getPostIsShowingByUserId, getUserBidPost, getAllCityPost, getSomePost, getPostsByCateChildId, getPostsByType } = require("../services/common.service")
 
 module.exports = {
 
@@ -197,7 +197,7 @@ module.exports = {
     getAllPostByUserId: async (req, res, next) => {
         try {
             const userId = req.params.id
-            
+
             const data = await getAllPostByUserId(userId);
             for (let item in data) {
                 data[item].image = await getFirstImageForProduct(data[item].id);
@@ -373,6 +373,21 @@ module.exports = {
                 status: 200,
                 images,
             })
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getPostsByType: async (req, res, next) => {
+        try {
+            const { type, activeId } = req.params;
+            const data = await getPostsByType(type, activeId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
         } catch (error) {
             next(error);
         }

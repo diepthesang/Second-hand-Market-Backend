@@ -5,6 +5,7 @@ const { create } = require("domain");
 const { Op, where } = require("sequelize");
 // const { devNull } = require("os");
 const fs = require('fs');
+const { sequelize } = require("../db/models");
 
 
 module.exports = {
@@ -41,7 +42,7 @@ module.exports = {
         }
     },
 
-    createPost: async (cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, userId) => {
+    createPost: async (cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, userId, typePost) => {
         try {
             return await db.Post.create(
                 {
@@ -57,6 +58,7 @@ module.exports = {
                     ward,
                     street: address,
                     userId,
+                    typePost
                 }
             )
         } catch (error) {
@@ -125,7 +127,10 @@ module.exports = {
                         price: {
                             [Op.not]: -1,
                         }
-                    }
+                    },
+                    order: [
+                        ['id', 'DESC']
+                    ]
                 }
             )
         } catch (error) {
@@ -165,7 +170,10 @@ module.exports = {
                         userId,
                         activeId,
                         price: -1
-                    }
+                    },
+                    order: [
+                        ['id', 'DESC']
+                    ]
                 }
             )
         } catch (error) {
@@ -595,6 +603,23 @@ module.exports = {
         }
     },
 
+    updateTypeForPost: async (id, typePost) => {
+        try {
+            return await db.Post.update(
+                {
+                    typePost
+                },
+                {
+                    where: {
+                        id
+                    }
+                }
+            )
+        } catch (error) {
+
+        }
+    },
+
     removeAution: async (id) => {
         try {
             return db.BidOrder.destroy(
@@ -746,11 +771,6 @@ module.exports = {
                         id,
                         userId
                     },
-                    include: [
-                        {
-                            model: db.PostImage
-                        }
-                    ]
                 }
             );
 
@@ -767,7 +787,8 @@ module.exports = {
 
             listImagePaths.map(item => {
                 return listFiles.push(item.imagePath);
-            })
+            });
+
 
 
             listFiles.forEach(item => {
@@ -784,7 +805,35 @@ module.exports = {
                         userId,
                     }
                 }
+            );
+
+            // xoa hang trong bang PostAutions
+            await db.PostAuction.destroy(
+                {
+                    where: {
+                        postId: id,
+                    }
+                }
             )
+
+            // xoa hang trong bang Cart
+            await db.Cart.destroy(
+                {
+                    where: {
+                        postId: id
+                    }
+                }
+            )
+
+            // xoa hang trong bang Likes
+            await db.Like.destroy(
+                {
+                    where: {
+                        postId: id
+                    }
+                }
+            )
+
 
             return listImagePaths;
 
@@ -807,7 +856,10 @@ module.exports = {
                     include: [
                         {
                             model: db.Post,
-                            attributes: ['id', 'title', 'price'],
+                            attributes: ['id', 'title', 'price', 'createdAt'],
+                            where: {
+                                activeId: 1,
+                            },
                             include: [
                                 {
                                     model: db.PostImage,
@@ -841,7 +893,61 @@ module.exports = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+
+    withdrawByUser: async (isWithdrew, userId) => {
+        try {
+            return await db.Revenue.update(
+                {
+                    isWithdrew
+                },
+                {
+                    where: {
+                        userId
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getRevenueByUser: async (isWithDrew, userId) => {
+        try {
+            return await db.Revenue.findAll(
+                {
+                    where: {
+                        userId,
+                        isWithDrew,
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getQtyPostByMonth: async (month, userId) => {
+        try {
+            return await db.Post.count(
+                {
+                    where: {
+                        userId,
+                        createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
+                    },
+                }
+            );
+
+        } catch (error) {
+            throw error;
+        }
+    },
+
+  
+
+
+
+
 
 
 

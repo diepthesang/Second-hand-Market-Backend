@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   Revenue.init({
     userId: DataTypes.STRING,
-    revenue: DataTypes.INTEGER
+    revenue: DataTypes.INTEGER,
+    isWithdrew: DataTypes.BOOLEAN,
   }, {
     sequelize,
     modelName: 'Revenue',

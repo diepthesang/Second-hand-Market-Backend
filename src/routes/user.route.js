@@ -3,7 +3,7 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getPostBidShowByUserId, getPostHideByUserId, } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getPostBidShowByUserId, getPostHideByUserId, withdrawByUser, getRevenueByUser, getQtyPostByMonths, } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
 const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
@@ -80,7 +80,17 @@ route.delete('/Post/:id', passport.authenticate('jwt', { session: false }), remo
 
 route.get('/Post/like', passport.authenticate('jwt', { session: false }), getPostsLike)
 
-route.get('/post/bid/page/:page', passport.authenticate('jwt', { session: false }), getPostBidShowByUserId)
+route.get('/post/bid/page/:page', passport.authenticate('jwt', { session: false }), getPostBidShowByUserId);
+
+route.get('/revenue/isWithdrew/:isWithdrew', passport.authenticate('jwt', { session: false }), getRevenueByUser);
+
+route.put('/revenue/isWithdrew', passport.authenticate('jwt', { session: false }), withdrawByUser);
+
+route.get('/chart/qtyPost', passport.authenticate('jwt', { session: false }), getQtyPostByMonths);
+
+
+
+
 
 
 
