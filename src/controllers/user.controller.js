@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId, updateTypeForPost, withdrawByUser, getRevenueByUser, getQtyPostByMonth, searchUserByLastname } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId, updateTypeForPost, withdrawByUser, getRevenueByUser, getQtyPostByMonth, searchUserByLastname, getBiddingPostByUser, getQtyPostInCartByUser, getOrderPostings, getOrderPostingsByUser, updateStatusPostingCart, getPostIdCheckoutByUser, getTransactionByOrderId, updatePostingCart, getPostingBuy, getPostingBuyByUser, getPostBuy, updateStatusOrderByBuyder } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -15,7 +15,7 @@ module.exports = {
         try {
             let { cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree } = req.body;
 
-            let typePost = '';
+            let typePost = 'SELL';
 
             console.log({ cateId, name, statusId, warrantyId, madeInId, description, price, province, district, ward, address, startPrice, bidEndTime, isBid, isFree });
 
@@ -32,6 +32,7 @@ module.exports = {
                     status: 404,
                     message: 'Tiền phải là số',
                 }
+                return
             }
 
             if (req.files.length === 0) {
@@ -40,6 +41,7 @@ module.exports = {
                     codeMessage: 'ERR_FIELD',
                     message: 'Chưa có hình ảnh cho sản phẩm của bạn',
                 }
+                return
             }
 
             if (isBid === 'true') {
@@ -52,6 +54,7 @@ module.exports = {
                     }
                 }
             } else if (isFree === 'true') {
+                typePost === 'FREE'
                 price = 0;
             } else {
                 if (Number(price) < 1000) {
@@ -78,6 +81,7 @@ module.exports = {
             if (isBid === 'true') {
                 console.log('vo day');
                 if (new Date(bidEndTime).getTime() - Date.now() <= 1000 * 60 * 10) {
+                    await db.Post.destroy({ where: { id: post.dataValues.id } });
                     return res.status(400).json(
                         {
                             status: 400,
@@ -679,6 +683,7 @@ module.exports = {
                     console.log('** lispostorder:::', _listPostOrder);
                     await createListPostOrder(_listPostOrder)
                     await removePostInCart(_userId);
+                    //    await updateStatusPostingCart('')
                 } catch (error) {
                     next(error);
                 }
@@ -757,6 +762,8 @@ module.exports = {
         try {
             const { postId, priceBid, postAuctionId } = req.body;
             const data = await createPriceBidByUser(req.user.userId, postId, priceBid, postAuctionId);
+            const count = await getBiddingPostByUser(req.user.userId);
+            _io.emit('qtyBiddingPost', { qty: count.count, userId: req.user.userId });
             return res.status(200).json(
                 {
                     status: 200,
@@ -787,6 +794,8 @@ module.exports = {
         try {
             const { id } = req.params;
             const data = await removeAution(id);
+            const count = await getBiddingPostByUser(req.user.userId);
+            _io.emit('qtyBiddingPost', { qty: count.count, userId: req.user.userId });
             return res.status(200).json(
                 {
                     status: 200,
@@ -875,6 +884,11 @@ module.exports = {
         try {
             const { id, status } = req.body;
             const data = await updateConfirmOrderPost(id, status);
+            console.log('updatênk:::', data);
+
+            const { userId, postId } = await getTransactionByOrderId(id);
+            await updatePostingCart(postId, userId, status);
+
             return res.status(200).json(
                 {
                     status: 200,
@@ -954,7 +968,7 @@ module.exports = {
                 const qtyPost = await getQtyPostByMonth(item, req.user.userId);
                 return (
                     {
-                        name: `Thang ${item}`,
+                        name: `T ${item}`,
                         "Bài đăng": qtyPost
                     }
                 )
@@ -970,6 +984,120 @@ module.exports = {
             next(error);
         }
     },
+
+    getBiddingPostByUser: async (req, res, next) => {
+        try {
+            const data = await getBiddingPostByUser(req.user.userId);
+            _io.emit('qtyBiddingPost', { qty: data.count, userId: req.user.userId });
+            return res.status(200).json(
+                {
+                    status: 200,
+                    count: data.count,
+                    data: data.rows,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getQtyPostInCartByUser: async (req, res, next) => {
+        try {
+            const data = await getQtyPostInCartByUser(req.user.userId);
+            _io.emit('qtyCart', { qty: data, userId: req.user.userId });
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+
+        }
+    },
+
+
+    getOrderPostingsByUser: async (req, res, next) => {
+        try {
+            const { status } = req.params;
+            const data = await getOrderPostingsByUser(req.user.userId, status);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    updateStatusPostingCart: async (req, res, next) => {
+        try {
+            const { status } = req.body;
+            const data = await updateStatusPostingCart(status, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getPostIdCheckoutByUser: async (req, res, next) => {
+        try {
+            const { checked } = req.params;
+            const data = await getPostIdCheckoutByUser(checked, req.user.userId);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // lay cac san phảm  mua boi usrid
+    getPostingBuyByUser: async (req, res, next) => {
+        try {
+            const { status } = req.params
+            // const data = await getPostingBuyByUser(req.user.userId, status);
+            const data = await getPostBuy(req.user.userId, status)
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+
+    updateStatusOrderByBuyder: async (req, res, next) => {
+        try {
+            const { postId, status } = req.body;
+            console.log({ postId, status });
+            const data = await updateStatusOrderByBuyder(postId, req.user.userId, status);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data,
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    }
+
+
+
 
 
 

@@ -1,291 +1,109 @@
-// // // 
-
-const { removePostByPostId, removePostsByUserId } = require("./src/services/admin.service");
-
-// const { v4: uuidv4 } = require('uuid');
-// const { sequelize } = require("./src/db/models");
-// const db = require("./src/db/models");
-// const { searchUserByLastname } = require("./src/services/user.service");
-
-// // const { getPostsByCateChildId } = require("./src/services/common.service");
-// // const { removePost } = require("./src/services/user.service");
-
-const fs = require('fs');
-// // const db = require("./src/db/models");
-// // const { getUserInfo } = require("./src/services/admin.service");
-// // const { Op } = require("sequelize");
-// // const { sequelize } = require("./src/db/models");
-
-
-// // // console.log(Date.now());
-
-// // // getPostsByCateChildId(2).then(data => console.log(data[0].PostImages)).catch()
-
-// // // socket => use
-
-
-// // // removePost(245, 'ba2896d3-f1da-4c7c-a2bd-35b62fa956d5').then(data => console.log(data)).catch();
-
-
-// // // console.log(__dirBaseRoot);
-
-// // // fs.unlink(`${__dirBaseRoot}/upload/1667615539477-332723284-z3853080586852_7181e5fb3fe603c68ec483f27eda986d.jpg`, (err => {
-// // //   if (err) console.log(err);
-// // //   else {
-// // //     console.log("\nDeleted file: example_file.txt");
-
-// // //     // Get the files in current directory
-// // //     // after deletion
-// // //     // getFilesInDirectory();
-// // //   }
-// // // }));
-
-
-// // // const setData = async () => {
-// // //   try {
-// // //     const data = await db.UserStatus.bulkCreate(
-// // //       [
-// // //         {
-// // //           status: 'Active'
-// // //         },
-// // //         {
-// // //           status: 'Ban'
-// // //         }
-// // //       ]
-// // //     )
-
-// // //     return data;
-// // //   } catch (error) {
-
-// // //   }
-// // // }
-
-// // // setData().then(data => console.log(data))
-
-
-// // // getUserInfo().then(data => console.log(data))
-
-
-// const createUser = async () => {
-//   await db.User.bulkCreate(
-//     [
+// const data = [
+//   {
+//     "id": 80,
+//     "createdAt": "2022-12-12T08:24:58.000Z",
+//     "Orders": [
 //       {
-//         userId: uuidv4(),
-//         firstName: 'Diep',
-//         lastName: 'The Hoang Linh',
-//         email: 'sff'
-
+//         "id": 102,
+//         "status": "CONFIRM",
+//         "postId": 503,
+//         "price": 9999,
+//         "Post": {
+//           "title": "aaaaa",
+//           "PostImages": [
+//             {
+//               "imagePath": "/upload/1670831569099-841081366-Can-ngay-iPhone-14-mo-ban-tai-Viet-Nam-hang-loat-dien-thoai-2-1664948901-846-width740height641.jpg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831569099-872851683-0a-xoa-tray-iphone-14-1.jpg.webp"
+//             }
+//           ]
+//         }
 //       },
 //       {
-//         userId: uuidv4(),
-//         firstName: 'Nguyen',
-//         lastName: 'Thi Chung',
-//         email: 'sff'
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Diep',
-//         lastName: 'The Hoang Linh',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Nguyen',
-//         lastName: 'Thi Chung',
-//         email: 'sff'
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Diep',
-//         lastName: 'The Hoang Linh',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Nguyen',
-//         lastName: 'Thi Chung',
-//         email: 'sff'
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
-//       {
-//         userId: uuidv4(),
-//         firstName: 'Hoang',
-//         lastName: 'Tam Dan',
-//         email: 'sff'
-
-//       },
+//         "id": 103,
+//         "status": "CONFIRM",
+//         "postId": 502,
+//         "price": 10000,
+//         "Post": {
+//           "title": "test bid",
+//           "PostImages": [
+//             {
+//               "imagePath": "/upload/1670831280472-910888709-chi-tien-trieu-do-vo-iphone-cu-len-iphone-14-8bf9d7d06ca44bc097b5c7f85b84e1eb.jpeg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831280471-678680488-Can-ngay-iPhone-14-mo-ban-tai-Viet-Nam-hang-loat-dien-thoai-2-1664948901-846-width740height641.jpg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831280470-80852058-0a-xoa-tray-iphone-14-1.jpg.webp"
+//             }
+//           ]
+//         }
+//       }
 //     ]
-//   )
-// }
+//   },
+//   {
+//     "id": 78,
+//     "createdAt": "2022-12-12T07:54:38.000Z",
+//     "Orders": [
+//       {
+//         "id": 98,
+//         "status": "CONFIRM",
+//         "postId": 503,
+//         "price": 9999,
+//         "Post": {
+//           "title": "aaaaa",
+//           "PostImages": [
+//             {
+//               "imagePath": "/upload/1670831569099-841081366-Can-ngay-iPhone-14-mo-ban-tai-Viet-Nam-hang-loat-dien-thoai-2-1664948901-846-width740height641.jpg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831569099-872851683-0a-xoa-tray-iphone-14-1.jpg.webp"
+//             }
+//           ]
+//         }
+//       },
+//       {
+//         "id": 99,
+//         "status": "CONFIRM",
+//         "postId": 502,
+//         "price": 10000,
+//         "Post": {
+//           "title": "test bid",
+//           "PostImages": [
+//             {
+//               "imagePath": "/upload/1670831280472-910888709-chi-tien-trieu-do-vo-iphone-cu-len-iphone-14-8bf9d7d06ca44bc097b5c7f85b84e1eb.jpeg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831280471-678680488-Can-ngay-iPhone-14-mo-ban-tai-Viet-Nam-hang-loat-dien-thoai-2-1664948901-846-width740height641.jpg"
+//             },
+//             {
+//               "imagePath": "/upload/1670831280470-80852058-0a-xoa-tray-iphone-14-1.jpg.webp"
+//             }
+//           ]
+//         }
+//       }
+//     ]
+//   }
+// ];
 
-// createUser().then(data => console.log(data))
+const { updateStatusOrderByBuyder } = require("./src/services/user.service");
 
+// const { listenerCount } = require("process");
+// const { getPostBuy, updateStatusOrderByBuyder } = require("./src/services/user.service");
 
-// // function formatCash(str) {
-// //   return str.split('').reverse().reduce((prev, next, index) => {
-// //     return ((index % 3) ? next : (next + '.')) + prev
-// //   })
-// // }
+// const arrList = [];
 
+// const list = data.map(item => {
+//   return {
+//     item: item.Orders.map(idex => idex.Post)
+//   }
 
-// // // console.log(formatCash(String(1000000000)))
+// })
 
-
-// // // const removeAndJoin = async (id) => {
-// // //   try {
-// // //     const data = await db.Post.findAll(
-// // //       {
-// // //         where: {
-// // //           id: id
-// // //         },
-// // //         raw: true,
-// // //         nest: true,
-// // //         include: [
-// // //           {
-// // //             model: db.Cart,
-// // //           }
-// // //         ]
-// // //       }
-// // //     );
-// // //     return data
-// // //   } catch (error) {
-// // //     console.log(error);
-// // //   }
-// // // };
-
-// // // removeAndJoin(423).then(data => console.log(data)).catch(err => console.log(err))
-
-
-// // // const setCate = async () => {
-// // //   await db.Category.bulkCreate(
-// // //     [
-// // //       {
-// // //         cateName: 'Phương tiện vẫn chuyển ô tô, xe máy'
-// // //       },
-// // //       {
-// // //         cateName: 'Trang thiết bị y tế'
-// // //       },
-// // //       {
-// // //         cateName: 'Mẹ và bé'
-// // //       },
-// // //       {
-// // //         cateName: 'Đồ dùng văn phòng'
-// // //       },
-// // //     ]
-// // //   )
-// // // };
-
-// // // setCate().then(data => console.log(data));
-
-// // const updateRutTien = async (month, userId) => {
-// //   const data = await db.Post.count(
-// //     {
-// //       where: {
-// //         userId,
-// //         createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
-// //       },
-// //     }
-// //   );
-// //   return data;
-// // }
-// // updateRutTien(11, 'ba2896d3-f1da-4c7c-a2bd-35b62fa956d5').then(data => console.log(data));
-
-
-
-// // const getListQtyPostByMonth = async () => {
-// //   try {
-// //     listMonth = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-// //     // const _listPost = listMonth.map((item) => {
-// //     //   let qtyPost = updateRutTien(item, 'ba2896d3-f1da-4c7c-a2bd-35b62fa956d5');
-// //     //   return (
-// //     //     {
-// //     //       name: `Thang ${item}`,
-// //     //       qty: qtyPost
-// //     //     }
-// //     //   )
-// //     // });
-
-// //     const _listPost = await Promise.all(listMonth.map(async (item) => {
-// //       let qtyPost = await updateRutTien(item, 'ba2896d3-f1da-4c7c-a2bd-35b62fa956d5');
-// //       return (
-// //         {
-// //           name: `Thang ${item}`,
-// //           qty: qtyPost
-// //         }
-// //       )
-// //     }))
-
-// //     return _listPost;
-// //   } catch (error) {
-
-// //   }
-// // };
-
-// // getListQtyPostByMonth().then(data => console.log(data));
+// console.log(data);
 
 
 
 
-
-// // searchUserByLastname('a').then(data => console.log(data));
-
-
-
-removePostsByUserId('ba2896d3-f1da-4c7c-a2bd-35b62fa956d5').then(data => console.log(data)).catch(err => console.log(err))
+updateStatusOrderByBuyder(502, '6a6d8327-3332-4b96-835c-2bed3faa44cf').then(data => console.log(data)).catch(err => console.log(err))

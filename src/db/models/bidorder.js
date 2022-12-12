@@ -16,6 +16,16 @@ module.exports = (sequelize, DataTypes) => {
           sourceKey: 'userId',
           foreignKey: 'userId'
         })
+      BidOrder.hasOne(models.PostAuction,
+        {
+          sourceKey: 'postAuctionId',
+          foreignKey: 'id'
+        })
+      BidOrder.hasOne(models.Post,
+        {
+          sourceKey: 'postId',
+          foreignKey: 'id'
+        })
     }
   }
   BidOrder.init({

@@ -24,10 +24,12 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'userId',
         foreignKey: 'userId'
       });
+    
     }
   }
   Cart.init({
     postId: DataTypes.INTEGER,
+    status: DataTypes.STRING,
     userId: DataTypes.STRING,
     checked: DataTypes.BOOLEAN,
   }, {

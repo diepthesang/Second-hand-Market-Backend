@@ -2,7 +2,7 @@ const db = require("../db/models")
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { create } = require("domain");
-const { Op, where } = require("sequelize");
+const { Op, where, DATE } = require("sequelize");
 // const { devNull } = require("os");
 const fs = require('fs');
 const { sequelize } = require("../db/models");
@@ -729,7 +729,7 @@ module.exports = {
                             },
                             {
                                 model: db.Transaction,
-                                attributes: ['createdAt'],
+                                attributes: ['createdAt', 'userId'],
                                 include: [
                                     {
                                         model: db.User,
@@ -747,13 +747,13 @@ module.exports = {
 
     updateConfirmOrderPost: async (id, status) => {
         try {
-            return await db.Order.update(
+            return !! await db.Order.update(
                 {
                     status
                 },
                 {
                     where: {
-                        id
+                        id,
                     }
                 }
             );
@@ -943,7 +943,368 @@ module.exports = {
         }
     },
 
-  
+    getBiddingPostByUser: async (userId) => {
+        try {
+
+            return await db.BidOrder.findAndCountAll(
+                {
+                    where: {
+                        userId,
+                    },
+                    order: [
+                        ['id', 'DESC']
+                    ],
+                    attributes: ['postId'],
+                    raw: false,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.Post,
+                            where: {
+                                typePost: 'BIDDING'
+                            },
+                            attributes: ['title',],
+                            include: [
+                                {
+                                    model: db.PostImage,
+                                    attributes: ['imagePath']
+                                }
+                            ]
+                        }
+                    ]
+                }
+            )
+        }
+
+        catch (error) {
+            throw error;
+        }
+    },
+
+    getQtyPostInCartByUser: async (userId) => {
+        try {
+            return await db.Cart.count(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+
+    getOrderPostingsByUser: async (userId) => {
+        try {
+            return await db.Cart.findAll(
+                {
+                    where: {
+                        userId,
+                        status: 'ORDER'
+                    },
+                    raw: false,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.Post,
+                            attributes: ['title', 'price',],
+                            include: [
+                                {
+                                    model: db.PostImage,
+                                    attributes: ['imagePath']
+                                },
+                                {
+                                    model: db.User,
+                                    attributes: ['firstName', 'lastName']
+                                }
+                            ]
+
+                        },
+
+                    ]
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+    updateStatusPostingCart: async (status, userId) => {
+        try {
+            return !! await db.Cart.update(
+                {
+                    status
+                },
+                {
+                    where: {
+                        userId,
+                        checked: 1,
+                        status: null
+                    }
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPostIdCheckoutByUser: async (checked, userId) => {
+        try {
+            return await db.Cart.findAll(
+                {
+                    where: {
+                        checked,
+                        userId
+                    },
+                    attributes: ['postId']
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+    getTransactionByOrderId: async (id) => {
+        try {
+            const data = await db.Order.findOne(
+                {
+                    where: {
+                        id
+                    },
+                    attributes: ['postId'],
+                    raw: true,
+                    nest: true,
+                    include:
+                        [
+                            {
+                                model: db.Transaction,
+                                attributes: ['userId',]
+
+                            }
+                        ]
+                }
+            );
+
+            return {
+                userId: data.Transaction.userId,
+                postId: data.postId,
+            }
+
+            // return {
+            //     postId: data.id,
+            //     userId: data.User.userId
+            // }
+
+        } catch (error) {
+            throw error
+        }
+    },
+
+    updatePostingCart: async (postId, userId, status) => {
+        try {
+            return !!db.Cart.update(
+                {
+                    status
+                },
+                {
+                    where: {
+                        userId, postId
+                    }
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+    // lay các sản phẩm mua bởi userid
+    getPostingBuyByUser: async (userId, status) => {
+        let _where = {};
+
+        if (status === "ALL") {
+            _where = {}
+        } else {
+            _where = {
+                status
+            }
+        }
+
+        console.log('where::::', _where);
+
+        try {
+            return await db.Transaction.findAll(
+                {
+                    where: {
+                        userId
+                    },
+                    order: [
+                        ['id', 'DESC']
+                    ],
+                    attributes: ['id', 'createdAt'],
+                    raw: false,
+                    nest: true,
+                    // plain: true,
+                    mapToModel: true,
+                    include: [
+                        {
+                            model: db.Order,
+
+                            where: {
+                                ..._where
+                            }
+
+                            ,
+                            attributes: ['id', 'status', 'postId', 'price',],
+                            raw: true,
+                            nest: true,
+                            include: [
+                                {
+                                    model: db.Post,
+                                    attributes: ['title'],
+                                    raw: false,
+                                    nest: true,
+                                    require: true,
+                                    plain: true,
+
+                                    include: [
+                                        {
+                                            model: db.PostImage,
+                                            attributes: ['imagePath']
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+
+                }
+            )
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    getPostBuy: async (userId, status) => {
+        try {
+            let _where = {};
+
+            if (status === "ALL") {
+                _where = {}
+            } else {
+                _where = {
+                    status
+                }
+            }
+            const data = await db.Transaction.findAll(
+                {
+                    where: {
+                        userId
+                    },
+                    attributes: ['id'],
+                    raw: true,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.Order,
+                            where: {
+                                ..._where
+                            },
+                            attributes: ['postId', 'id']
+                        }
+                    ]
+                }
+
+
+            );
+            // let listPostId = [];
+            // for (const item of data) {
+            //     console.log(item.id);
+            //     const _data = await db.Order.findAll(
+            //         {
+            //             where: {
+            //                 transactionId: item.id
+            //             },
+            //             attributes: ['postId']
+            //         }
+            //     );
+            //     for (const item of _data) {
+            //         listPostId.push(item.postId)
+            //     }
+            // }
+
+            let listPost = [];
+
+            for (const item of data) {
+                listPost.push(
+                    {
+                        orderId: item.Orders.id,
+                        Post: await db.Post.findOne(
+                            {
+                                where: {
+                                    id: item.Orders.postId
+                                },
+                                raw: false,
+                                nest: true,
+                                attributes: ['id', 'title', 'price'],
+                                include: [
+                                    {
+                                        model: db.PostImage,
+                                        attributes: ['imagePath']
+                                    }
+                                    ,
+                                    {
+                                        model: db.PostAuction,
+                                        attributes: ['priceEnd']
+                                    }
+                                ],
+
+
+                            }
+                        ),
+
+
+                    }
+                )
+
+            };
+
+
+
+            return listPost
+        } catch (error) {
+
+        }
+    },
+
+    updateStatusOrderByBuyder: async (postId, userId, status) => {
+        try {
+            return await db.Order.findAll(
+                // {
+                //     status
+                // },
+                {
+                    where: {
+                        postId,
+                    },
+                    raw: true,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.Transaction,
+                            where: {
+                                userId
+                            }
+                        }
+                    ]
+                }
+            )
+        } catch (error) {
+
+        }
+    }
+
 
 
 

@@ -83,7 +83,6 @@ module.exports = (sequelize, DataTypes) => {
   }
   Post.init({
     cateId: DataTypes.STRING,
-    // proId: DataTypes.STRING,
     title: DataTypes.STRING,
     statusId: DataTypes.ENUM('1', '2', '3'),
     warrantyId: DataTypes.INTEGER,
@@ -95,7 +94,7 @@ module.exports = (sequelize, DataTypes) => {
     ward: DataTypes.STRING,
     street: DataTypes.STRING,
     activeId: DataTypes.ENUM('1', '2', '3', '4', '5'),
-    typePost: DataTypes.ENUM('SELL', 'BID', 'BIDDING'),
+    typePost: DataTypes.ENUM('SELL', 'FREE', 'BID', 'BIDDING'),
     userId: DataTypes.STRING,
     likeCount: DataTypes.BIGINT,
   }, {

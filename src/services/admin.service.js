@@ -1,6 +1,8 @@
 const { Op } = require("sequelize");
 const db = require("../db/models")
 const fs = require('fs');
+const { threadId } = require("worker_threads");
+const { sequelize } = require("../db/models");
 
 module.exports = {
   getUserInfo: async () => {
@@ -266,6 +268,138 @@ module.exports = {
   },
 
 
+  getParentCategories: async (cateParent) => {
+    try {
+      return db.Category.findAll(
+        {
+          where: {
+            cateParent
+          },
+          attributes: ['id', 'cateName', 'cateLogoImg', 'cateParent']
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  addCategory: async (cateName, cateLogoImg, cateParent) => {
+    try {
+      return await db.Category.create(
+        {
+          cateName,
+          cateLogoImg,
+          cateParent
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  removeCategoryById: async (id) => {
+    try {
+      return !! await db.Category.destroy(
+        {
+          where: {
+            id
+          }
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateCategory: async (id, cateName, cateLogoImg) => {
+    try {
+      return !! await db.Category.update(
+        {
+          cateName,
+          cateLogoImg
+        },
+        {
+          where: {
+            id
+          }
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCategoryById: async (id) => {
+    try {
+      return await db.Category.findOne(
+        {
+          where: {
+            id
+          }
+        }
+      )
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getUsersByMonth: async (month) => {
+    try {
+      return await db.User.count(
+        {
+          where: {
+            createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
+          },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPostingsByMonth: async (month) => {
+    try {
+      return await db.Post.count(
+        {
+          where: {
+            createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
+          },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPostingSoldByMonth: async (month, status) => {
+    try {
+      return await db.Order.count(
+        {
+          where: {
+            status,
+            createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
+          },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getBidPostingsByMonth: async (month) => {
+    try {
+      return await db.Post.count(
+        {
+          where: {
+            price: -1,
+            createdAt: sequelize.where(sequelize.fn("month", sequelize.col("createdAt")), month)
+          },
+        }
+      );
+    } catch (error) {
+      throw error;
+    }
+  },
 
 
 }

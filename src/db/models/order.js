@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'id'
       });
 
+      // Order.hasMany(models.Post, {
+      //   sourceKey: 'postId',
+      //   foreignKey: 'id'
+      // });
+
       Order.hasOne(models.Transaction, {
         sourceKey: 'transactionId',
         foreignKey: 'id'
@@ -25,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
   Order.init({
     status: DataTypes.STRING,
     transactionId: DataTypes.INTEGER,
+    buyderId: DataTypes.STRING,
     postId: DataTypes.INTEGER,
     price: DataTypes.INTEGER,
     qty: DataTypes.INTEGER,

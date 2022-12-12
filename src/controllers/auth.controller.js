@@ -76,7 +76,7 @@ module.exports = {
             }
 
         } catch (error) {
-            console.log(error);
+            console.log('***err_createAccount:::', error);
             return next(error)
         }
     },

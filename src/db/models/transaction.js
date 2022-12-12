@@ -15,6 +15,18 @@ module.exports = (sequelize, DataTypes) => {
         sourceKey: 'userId',
         foreignKey: 'userId'
       });
+
+      // Transaction.hasOne(models.Order, {
+      //   sourceKey: 'id',
+      //   foreignKey: 'transactionId'
+      // });
+
+      Transaction.hasMany(models.Order, {
+        sourceKey: 'id',
+        foreignKey: 'transactionId'
+      });
+
+
     }
   }
   Transaction.init({
