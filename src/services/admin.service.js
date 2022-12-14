@@ -9,9 +9,10 @@ module.exports = {
     try {
       return await db.User.findAll(
         {
-          attributes: ['userId', 'firstName', 'lastName', 'phone', 'address', 'starRating', 'createdAt'],
+          attributes: ['userId', 'firstName', 'lastName', 'phone', 'email', 'address', 'starRating', 'createdAt'],
           raw: true,
           nest: true,
+          order: [['id', 'DESC']],
           include: [
             {
               model: db.UserStatus,

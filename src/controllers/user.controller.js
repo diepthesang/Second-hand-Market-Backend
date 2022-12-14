@@ -1,6 +1,6 @@
 const httpMessage = require('../Helps/httpMessage');
 // var paypal = require('paypal-rest-sdk');
-const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId, updateTypeForPost, withdrawByUser, getRevenueByUser, getQtyPostByMonth, searchUserByLastname, getBiddingPostByUser, getQtyPostInCartByUser, getOrderPostings, getOrderPostingsByUser, updateStatusPostingCart, getPostIdCheckoutByUser, getTransactionByOrderId, updatePostingCart, getPostingBuy, getPostingBuyByUser, getPostBuy, updateStatusOrderByBuyder } = require('../services/user.service');
+const { createCategory, createImgPost, createPost, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurentLikePostByUser, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, removePostInCart, createListPostOrder, createAuction, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, getLikePostByUser, updatePriceEnd, createRevenue, getOrderBuyPostCofirm, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getOtherBidders, getPostBidShowByUserId, getPostHideByUserId, updateTypeForPost, withdrawByUser, getRevenueByUser, getQtyPostByMonth, searchUserByLastname, getBiddingPostByUser, getQtyPostInCartByUser, getOrderPostings, getOrderPostingsByUser, updateStatusPostingCart, getPostIdCheckoutByUser, getTransactionByOrderId, updatePostingCart, getPostingBuy, getPostingBuyByUser, getPostBuy, updateStatusOrderByBuyder, createOrder } = require('../services/user.service');
 const { v4: uuidv4 } = require('uuid');
 const { deleteMultiFiles, validateEmail } = require('./helps.controller');
 const { getFirstImageForProduct } = require('../services/common.service');
@@ -1093,6 +1093,102 @@ module.exports = {
             )
         } catch (error) {
             next(error)
+        }
+    },
+
+    createOrder: async (req, res, next) => {
+        try {
+            const { postId, status, price } = req.body;
+            const postIds = await db.Cart.findAll(
+                {
+                    where: {
+                        checked: 1,
+                        userId: req.user.userId,
+                    },
+                    attributes: ['postId']
+                }
+            );
+            console.log('postIds:::', postIds);
+
+            const posts = [];
+
+            for (const item of postIds) {
+                const post = await db.Post.findOne(
+                    {
+                        where: {
+                            id: item.postId,
+                        },
+                        attributes: ['id', 'price']
+                    }
+                );
+                posts.push(post);
+            }
+            console.log('post::::', posts);
+
+
+
+            for (const item of posts) {
+                const transactionId = await db.Transaction.create(
+                    {
+                        userId: req.user.userId,
+                        payment: null
+                    },
+
+                );
+                console.log('transactionId:::', transactionId.dataValues.id);
+
+                await createOrder(item.id, 'CONFIRM', item.price, transactionId.dataValues.id);
+                await removePostInCart(req.user.userId)
+
+            }
+
+            const data = await getQtyPostInCartByUser(req.user.userId);
+            _io.emit('qtyCart', { qty: data, userId: req.user.userId });
+
+
+
+            // const data = await createOrder(postId, status, price);
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data: true
+                }
+            )
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    getTransactionByUser: async (req, res, next) => {
+        try {
+            const data = await db.Revenue.findAll(
+                {
+                    where: {
+                        userId: req.user.userId,
+                    },
+                    attributes: ['revenue', 'createdAt'],
+                    order: [
+                        ['id', 'DESC']
+                    ],
+                    raw: true,
+                    nest: true,
+                    include: [
+                        {
+                            model: db.User,
+                            attributes: ['firstName', 'lastName']
+                        },
+                    ]
+                }
+            );
+
+            return res.status(200).json(
+                {
+                    status: 200,
+                    data
+                }
+            )
+        } catch (error) {
+
         }
     }
 

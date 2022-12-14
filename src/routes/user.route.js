@@ -3,7 +3,7 @@ const express = require('express');
 const route = express.Router()
 require('../middlewares/passport.middleware')
 const passport = require('passport');
-const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getPostBidShowByUserId, getPostHideByUserId, withdrawByUser, getRevenueByUser, getQtyPostByMonths, getBiddingPostByUser, getQtyPostInCartByUser, getOrderPostings, getOrderPostingsByUser, updateStatusPostingCart, getPostIdCheckoutByUser, getPostingBuyByUser, updateStatusOrderByBuyder, } = require('../controllers/user.controller');
+const { createPost, uploadImage, createCategory, getUserInfo, updateLikePost, getPostShowByUserId, updateActiveIdPost, getAllPostByUserId, likePost, unlikePost, getCurrentLikePost, getCurrentLikePostByUser, updateProfile, updateProfileByUser, addPostToCart, getPostCartByUser, removePostCartByPostId, getPostToCheckout, checkPostCartToCheckout, getPostChecked, getAmountPostToCheckout, createPayment, getInfoPaymentSuccess, createPriceBidByUser, getHighestBidder, removeAution, getPriceBidByUserUserId, createBidSocket, getLikePostByUser, updatePriceEnd, getOrderBuyPost, updateConfirmOrderPost, removePost, getPostsLike, getPostBidShowByUserId, getPostHideByUserId, withdrawByUser, getRevenueByUser, getQtyPostByMonths, getBiddingPostByUser, getQtyPostInCartByUser, getOrderPostings, getOrderPostingsByUser, updateStatusPostingCart, getPostIdCheckoutByUser, getPostingBuyByUser, updateStatusOrderByBuyder, createOrder, getTransactionByUser, } = require('../controllers/user.controller');
 const { uploadMultiImage, uploadSingleImage } = require('../middlewares/uploadIFile.middleware');
 const { read } = require('fs');
 const { getPostByCateId, getPostIsShowingByUserId } = require('../controllers/common.controller');
@@ -102,6 +102,11 @@ route.get('/cart/checked/:checked', passport.authenticate('jwt', { session: fals
 route.get('/order/posting/buy/status/:status', passport.authenticate('jwt', { session: false }), getPostingBuyByUser)
 
 route.put('/order/buy/updateStatus', passport.authenticate('jwt', { session: false }), updateStatusOrderByBuyder);
+
+route.get('/order/create', passport.authenticate('jwt', { session: false }), createOrder);
+
+route.get('/transaction', passport.authenticate('jwt', { session: false }), getTransactionByUser);
+
 
 
 

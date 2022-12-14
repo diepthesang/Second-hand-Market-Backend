@@ -724,6 +724,10 @@ module.exports = {
                                     {
                                         model: db.PostImage,
                                         attributes: ['imagePath']
+                                    },
+                                    {
+                                        model: db.PostAuction,
+                                        attributes: ['priceEnd']
                                     }
                                 ]
                             },
@@ -736,7 +740,8 @@ module.exports = {
                                         attributes: ['firstName', 'lastName', 'address', 'phone']
                                     }
                                 ]
-                            }
+                            },
+
                         ]
                 }
             )
@@ -1202,6 +1207,9 @@ module.exports = {
                     where: {
                         userId
                     },
+                    order: [
+                        ['id', 'DESC']
+                    ],
                     attributes: ['id'],
                     raw: true,
                     nest: true,
@@ -1211,7 +1219,7 @@ module.exports = {
                             where: {
                                 ..._where
                             },
-                            attributes: ['postId', 'id']
+                            attributes: ['postId', 'id', 'status']
                         }
                     ]
                 }
@@ -1240,6 +1248,7 @@ module.exports = {
                 listPost.push(
                     {
                         orderId: item.Orders.id,
+                        status: item.Orders.status,
                         Post: await db.Post.findOne(
                             {
                                 where: {
@@ -1257,6 +1266,10 @@ module.exports = {
                                     {
                                         model: db.PostAuction,
                                         attributes: ['priceEnd']
+                                    },
+                                    {
+                                        model: db.User,
+                                        attributes: ['firstName', 'lastName']
                                     }
                                 ],
 
@@ -1274,7 +1287,7 @@ module.exports = {
 
             return listPost
         } catch (error) {
-
+            throw error
         }
     },
 
@@ -1303,7 +1316,25 @@ module.exports = {
         } catch (error) {
 
         }
-    }
+    },
+
+
+    createOrder: async (postId, status, price, transactionId) => {
+        try {
+            return !! await db.Order.create(
+                {
+                    postId,
+                    status,
+                    price,
+                    transactionId: Number(transactionId)
+                }
+            )
+        } catch (error) {
+            throw error
+        }
+    },
+
+
 
 
 

@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Revenue.hasOne(models.User, {
+        sourceKey: 'userId',
+        foreignKey: 'userId'
+      });
     }
   }
   Revenue.init({
